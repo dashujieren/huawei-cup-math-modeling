@@ -15,7 +15,7 @@
 
 ## 创建方式
 
-使用 GitHub 官方 CLI 的 Windows 便携版完成浏览器授权、私有仓库创建和首次推送。CLI 放在 `D:\codex\tools\github-cli`，不进入比赛仓库。相比手工创建空仓库，此方式能把远程创建、`origin` 配置和首次推送放在同一条可验证流程中，也不要求用户在对话中传递访问令牌。
+使用用户已安装并登录的 GitHub Desktop（安装位置 `D:\APP\GitHubDesktop`）载入本地仓库，通过 **Publish repository** 创建私有远程并完成首次推送。此方式复用桌面应用的安全凭据存储，不在对话、脚本或仓库中读取或传递访问令牌。
 
 ## 仓库结构
 
@@ -88,7 +88,7 @@ huawei-cup-math-modeling/
 2. Git LFS 初始化成功，声明的文件模式可由 `git lfs track` 识别。
 3. GitHub 上存在同名 private 仓库，`origin` 指向该仓库。
 4. 本地 `main` 已推送并跟踪 `origin/main`。
-5. GitHub CLI 查询确认仓库可见性为 private。
+5. GitHub Desktop 发布窗口保持 **Keep this code private** 选中；发布后结合可认证的远程读取成功与未认证访问不可见来复核私有性。
 6. 仓库中不存在访问令牌、密码或真实队伍身份信息。
 
 ## 后续使用
