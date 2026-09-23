@@ -1,15 +1,20 @@
-D 题数据整理与硬验收（只处理数据，不求解四问）
+D 题代码使用说明
 
-在 PyCharm 中打开本 code 文件夹，并把项目解释器设为 code\.venv\Scripts\python.exe。
-首次在另一台电脑运行时，可创建虚拟环境并按 requirements.txt 安装依赖。
+用 VS Code 打开仓库根目录，Python 解释器选择 code\.venv\Scripts\python.exe。
+首次在新电脑运行时，在仓库根目录终端依次执行：
+py -3.12 -m venv .\code\.venv
+.\code\.venv\Scripts\python.exe -m pip install -r .\code\requirements.txt
 
-直接运行 run_all.py：依次完成 01_extract、02_normalize、03_geo、04_validate。
-输出位于 code\outputs\run_年月日_时分秒\，每次运行新建目录，不覆盖既有结果。
-也可以依次运行 01_extract.py 至 04_validate.py，但必须给每个脚本同一个 --run-dir 参数。
+原始附件放在 0_3_数据。按下面顺序打开并运行 Python 文件：
+1. code\0_0_run_all.py：清洗和校验数据，结果在 code\0_outputs\run_时间戳。
+2. code\q1_0_baseline.py：生成问题一基线表格。
+3. code\q1_2_plot_results.py：生成基线图的 PNG 和 PDF。
+4. code\q1_3_optimize.py：生成问题一优化表格，求解可能需要几分钟。
+5. code\q1_5_plot_optimization.py：生成优化图的 PNG 和 PDF。
 
-只有 meta\qa_report.csv 全部为 PASS 且 meta\READY.txt 存在，clean 和 derived 才可供后续四问使用。
-后续 Python 代码应调用 pipeline.verify_ready(运行目录)；它会复核清洗表、航段及元数据的哈希，防止验收后文件被改动。
-原始 Excel、MAT、GeoTIFF 均只读。CSV 使用 UTF-8；schema.json 说明字段类型、单位和来源。
+问题一的表格和图片都在 code\1_outputs：表格目录以 table 结尾，图片目录以 figure 结尾。
+0_data_pipeline_test.py、q1_1_baseline_test.py、q1_4_optimize_test.py 是检查文件，不参与正常出结果。
+需要运行检查时，在仓库根目录终端执行：
+.\code\.venv\Scripts\python.exe -m pytest .\code -q
 
-本代码按《2026华为杯D题_建模执行思路_V1.0.pdf》的 Part 02-03 执行。
-PDF 内页标为 V3.0，版本号以文件内容为准；它是一份实施建议，不能替代原题及附件。
+数据处理完成以 meta\READY.txt 为准；基线和优化结果分别以 Q1_READY.txt、Q1_OPT_READY.txt 为准。

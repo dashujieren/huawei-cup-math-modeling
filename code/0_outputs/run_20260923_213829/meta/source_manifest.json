@@ -1,0 +1,238 @@
+{
+  "source_files": {
+    "0_3_数据/无人机应急物资运输基础数据/中继无人机数据.xlsx": "be52643ff29419233e6a141dca03a04160a8af551cab36d8c49b51bb836bea04",
+    "0_3_数据/无人机应急物资运输基础数据/物资需求与配送时限.xlsx": "5a3346159ceddcf585859d270b8f62114b388a1f737fbe64ffde0ee1fdc8170a",
+    "0_3_数据/无人机应急物资运输基础数据/调度中心与服务区.xlsx": "541a7af1ded08c9a3ff448480332cb5f6a54902f0afa6e9bcd50c1d2b2b34e38",
+    "0_3_数据/无人机应急物资运输基础数据/运输无人机数据.xlsx": "9296a657c07e042afba6aeea7999665d9cd24e00b592fd6c269de6e338480dcb",
+    "0_3_数据/无人机应急物资运输基础数据/通信链路参数.xlsx": "1860d153199e7ae460ba36e83b673374e640e19de91ea167f2877271001f5f81",
+    "0_3_数据/镇龙乡地理空间数据/镇龙乡及周边地理数据/数字高程模型数据（DEM）/镇龙乡及周边30米DEM.mat": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf",
+    "0_3_数据/镇龙乡地理空间数据/镇龙乡及周边地理数据/数字高程模型数据（DEM）/镇龙乡及周边30米DEM.tif": "741fe6de0b2bcaffd0f4007f574ee698d46197094f52cc954b532c4f90fc7c03"
+  },
+  "segments": {
+    "center": {
+      "source_file": "调度中心与服务区.xlsx",
+      "sheet": "数据",
+      "header_row": 2,
+      "first_data_row": 3,
+      "last_data_row": 3,
+      "rows": 1,
+      "columns": [
+        "调度中心编号",
+        "调度中心名称",
+        "经度（°）",
+        "纬度（°）",
+        "海拔（m）",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "zones": {
+      "source_file": "调度中心与服务区.xlsx",
+      "sheet": "数据",
+      "header_row": 6,
+      "first_data_row": 7,
+      "last_data_row": 21,
+      "rows": 15,
+      "columns": [
+        "服务区编号",
+        "服务区名称",
+        "经度（°）",
+        "纬度（°）",
+        "海拔（m）",
+        "本次需保障人口（人）",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "demand_summary": {
+      "source_file": "物资需求与配送时限.xlsx",
+      "sheet": "数据",
+      "header_row": 1,
+      "first_data_row": 2,
+      "last_data_row": 54,
+      "rows": 53,
+      "columns": [
+        "服务区编号",
+        "物资类型",
+        "总需求箱数",
+        "首批必须送达箱数",
+        "单箱质量（kg）",
+        "单箱体积（m³）",
+        "应急优先系数",
+        "首批截止时间（s）",
+        "期望送达时间（s）",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "boxes": {
+      "source_file": "物资需求与配送时限.xlsx",
+      "sheet": "逐箱货箱清单",
+      "header_row": 1,
+      "first_data_row": 2,
+      "last_data_row": 81,
+      "rows": 80,
+      "columns": [
+        "货箱编号",
+        "服务区编号",
+        "物资类型",
+        "单箱质量（kg）",
+        "单箱体积（m³）",
+        "是否首批保障",
+        "首批截止时间（s）",
+        "期望送达时间（s）",
+        "应急优先系数",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "transport_types": {
+      "source_file": "运输无人机数据.xlsx",
+      "sheet": "数据",
+      "header_row": 2,
+      "first_data_row": 3,
+      "last_data_row": 5,
+      "rows": 3,
+      "columns": [
+        "机型编号",
+        "机型名称",
+        "含电池空载总质量（kg）",
+        "最大载货质量（kg）",
+        "可用装载体积（m³）",
+        "计划巡航速度（m/s）",
+        "空载标准航程（m）",
+        "满载标准航程（m）",
+        "电池可用能量（kWh）",
+        "返航电量下限（%）",
+        "工位固定准备时间（s）",
+        "每箱装载时间（s）",
+        "接收点基础交接时间（s）",
+        "每箱增加交接时间（s）",
+        "最大爬升速度（m/s）",
+        "最大下降速度（m/s）",
+        "爬升能耗效率",
+        "下降能耗效率",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "transport_uavs": {
+      "source_file": "运输无人机数据.xlsx",
+      "sheet": "数据",
+      "header_row": 8,
+      "first_data_row": 9,
+      "last_data_row": 16,
+      "rows": 8,
+      "columns": [
+        "无人机编号",
+        "机型编号",
+        "初始位置",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "battery_pool": {
+      "source_file": "运输无人机数据.xlsx",
+      "sheet": "数据",
+      "header_row": 19,
+      "first_data_row": 20,
+      "last_data_row": 22,
+      "rows": 3,
+      "columns": [
+        "机型编号",
+        "共享电池组总数（组）",
+        "等效完全充电时间（s）",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "relay_type": {
+      "source_file": "中继无人机数据.xlsx",
+      "sheet": "数据",
+      "header_row": 2,
+      "first_data_row": 3,
+      "last_data_row": 3,
+      "rows": 1,
+      "columns": [
+        "机型编号",
+        "机型名称",
+        "含能源组件空载总质量（kg）",
+        "中继通信模块质量（kg）",
+        "计划起飞总质量（kg）",
+        "计划巡航速度（m/s）",
+        "巡航功率（kW）",
+        "能源组件可用能量（kWh）",
+        "返航电量下限（%）",
+        "工位固定准备时间（s）",
+        "建链时间（s）",
+        "架次周转时间（s）",
+        "最大爬升速度（m/s）",
+        "最大下降速度（m/s）",
+        "爬升能耗效率",
+        "下降能耗效率",
+        "悬停功率（kW）",
+        "通信附加功率（kW）",
+        "最大悬停离地高度（m）",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "relay_uavs": {
+      "source_file": "中继无人机数据.xlsx",
+      "sheet": "数据",
+      "header_row": 6,
+      "first_data_row": 7,
+      "last_data_row": 8,
+      "rows": 2,
+      "columns": [
+        "中继无人机编号",
+        "机型编号",
+        "初始位置",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "relay_energy_pool": {
+      "source_file": "中继无人机数据.xlsx",
+      "sheet": "数据",
+      "header_row": 11,
+      "first_data_row": 12,
+      "last_data_row": 12,
+      "rows": 1,
+      "columns": [
+        "机型编号",
+        "共享能源组件总数（组）",
+        "等效完全充电时间（s）",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    },
+    "comm_params": {
+      "source_file": "通信链路参数.xlsx",
+      "sheet": "数据",
+      "header_row": 2,
+      "first_data_row": 3,
+      "last_data_row": 16,
+      "rows": 14,
+      "columns": [
+        "参数类别",
+        "参数名称",
+        "符号",
+        "参数值",
+        "source_file",
+        "source_sheet",
+        "source_row"
+      ]
+    }
+  }
+}

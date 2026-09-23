@@ -1,0 +1,131 @@
+{
+  "source_data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260923_213829",
+  "source_validated_artifacts_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+  "method": "exact set partitioning over feasible same-zone box subsets and model types",
+  "energy_formula_status": "modeling assumption from execution guide, not an explicit official formula",
+  "minimum_sorties": 18,
+  "minimum_proof": "zone_mass_volume_lower_bound_equals_feasible_ffd",
+  "candidate_count": 18857,
+  "candidate_count_by_zone": {
+    "S001": 18063,
+    "S002": 247,
+    "S003": 247,
+    "S004": 63,
+    "S005": 63,
+    "S006": 63,
+    "S007": 31,
+    "S008": 31,
+    "S009": 7,
+    "S010": 7,
+    "S011": 7,
+    "S012": 7,
+    "S013": 7,
+    "S014": 7,
+    "S015": 7
+  },
+  "baseline_ffd": {
+    "baseline": "ffd",
+    "sorties": 18,
+    "delivered_boxes": 80,
+    "total_mass_kg": 758.0,
+    "total_volume_m3": 2.011,
+    "total_energy_kwh": 59.54240733204912,
+    "cumulative_operation_s": 32788.092676945584,
+    "cumulative_flight_s": 19288.092676945584,
+    "min_return_soc_pct": 20.9477350539361
+  },
+  "optimization_metrics": [
+    {
+      "name": "18架_能耗最低",
+      "metrics": {
+        "baseline": "18架_能耗最低",
+        "sorties": 18,
+        "delivered_boxes": 80,
+        "total_mass_kg": 758.0,
+        "total_volume_m3": 2.011,
+        "total_energy_kwh": 59.1316692415652,
+        "cumulative_operation_s": 32776.092676945584,
+        "cumulative_flight_s": 19288.092676945584,
+        "min_return_soc_pct": 23.088032111286317
+      },
+      "solver_status": "optimal",
+      "mip_gap": 1.0814652628385066e-15
+    },
+    {
+      "name": "18架_时间最短",
+      "metrics": {
+        "baseline": "18架_时间最短",
+        "sorties": 18,
+        "delivered_boxes": 80,
+        "total_mass_kg": 758.0,
+        "total_volume_m3": 2.011,
+        "total_energy_kwh": 59.13709137156267,
+        "cumulative_operation_s": 32776.092676945584,
+        "cumulative_flight_s": 19288.092676945584,
+        "min_return_soc_pct": 23.088032111286317
+      },
+      "solver_status": "optimal",
+      "mip_gap": 0.0
+    },
+    {
+      "name": "19架_能耗最低",
+      "metrics": {
+        "baseline": "19架_能耗最低",
+        "sorties": 19,
+        "delivered_boxes": 80,
+        "total_mass_kg": 758.0,
+        "total_volume_m3": 2.011,
+        "total_energy_kwh": 59.03431353210392,
+        "cumulative_operation_s": 34440.06520668797,
+        "cumulative_flight_s": 20562.06520668797,
+        "min_return_soc_pct": 23.088032111286317
+      },
+      "solver_status": "optimal",
+      "mip_gap": 0.0
+    },
+    {
+      "name": "19架_时间最短",
+      "metrics": {
+        "baseline": "19架_时间最短",
+        "sorties": 19,
+        "delivered_boxes": 80,
+        "total_mass_kg": 758.0,
+        "total_volume_m3": 2.011,
+        "total_energy_kwh": 59.91274819986326,
+        "cumulative_operation_s": 33784.51632705738,
+        "cumulative_flight_s": 19846.51632705738,
+        "min_return_soc_pct": 23.088032111286317
+      },
+      "solver_status": "optimal",
+      "mip_gap": 0.0
+    },
+    {
+      "name": "19架_时间约束折中",
+      "metrics": {
+        "baseline": "19架_时间约束折中",
+        "sorties": 19,
+        "delivered_boxes": 80,
+        "total_mass_kg": 758.0,
+        "total_volume_m3": 2.011,
+        "total_energy_kwh": 59.15729004239203,
+        "cumulative_operation_s": 34081.08600808261,
+        "cumulative_flight_s": 20203.08600808261,
+        "min_return_soc_pct": 23.088032111286317
+      },
+      "solver_status": "optimal",
+      "mip_gap": 0.0
+    }
+  ],
+  "nondominated_among_reported": [
+    "18架_能耗最低",
+    "19架_能耗最低"
+  ],
+  "checks_total": 635,
+  "checks_passed": 635,
+  "excluded": [
+    "entity-UAV scheduling",
+    "battery scheduling",
+    "delivery deadlines",
+    "return-margin sensitivity"
+  ]
+}
