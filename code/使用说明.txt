@@ -1,0 +1,15 @@
+D 题数据整理与硬验收（只处理数据，不求解四问）
+
+在 PyCharm 中打开本 code 文件夹，并把项目解释器设为 code\.venv\Scripts\python.exe。
+首次在另一台电脑运行时，可创建虚拟环境并按 requirements.txt 安装依赖。
+
+直接运行 run_all.py：依次完成 01_extract、02_normalize、03_geo、04_validate。
+输出位于 code\outputs\run_年月日_时分秒\，每次运行新建目录，不覆盖既有结果。
+也可以依次运行 01_extract.py 至 04_validate.py，但必须给每个脚本同一个 --run-dir 参数。
+
+只有 meta\qa_report.csv 全部为 PASS 且 meta\READY.txt 存在，clean 和 derived 才可供后续四问使用。
+后续 Python 代码应调用 pipeline.verify_ready(运行目录)；它会复核清洗表、航段及元数据的哈希，防止验收后文件被改动。
+原始 Excel、MAT、GeoTIFF 均只读。CSV 使用 UTF-8；schema.json 说明字段类型、单位和来源。
+
+本代码按《2026华为杯D题_建模执行思路_V1.0.pdf》的 Part 02-03 执行。
+PDF 内页标为 V3.0，版本号以文件内容为准；它是一份实施建议，不能替代原题及附件。
