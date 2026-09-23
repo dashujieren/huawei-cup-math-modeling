@@ -1,0 +1,11 @@
+{
+  "total_mass_kg": 758.0,
+  "total_volume_m3": 2.011,
+  "max_payload_kg": 80.0,
+  "max_volume_m3": 0.25,
+  "sortie_lower_bound_from_mass": 10,
+  "sortie_lower_bound_from_volume": 9,
+  "global_sortie_lower_bound": 10,
+  "energy_lower_bound_kwh": null,
+  "interpretation": "全球最少架次的必要物理下界；忽略路线、时限和电池，因此不能据此证明当前方案接近最优，也不构成能耗下界。"
+}

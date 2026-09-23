@@ -1,0 +1,1 @@
+Q2 plan passed independent checks; heuristic optimality is not proven.
