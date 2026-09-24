@@ -1,0 +1,4 @@
+PASS
+hard_deadline_violations=0
+first_failure=None
+global_optimality_proven=False

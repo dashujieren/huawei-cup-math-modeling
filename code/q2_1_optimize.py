@@ -26,7 +26,8 @@ from q1_0_baseline import (
 )
 from q2_0_baseline import (
     DELIVERY_COLUMNS, SORTIE_COLUMNS, charge_to_full_s, optional_seconds,
-    read_resources, required_seconds, validate_template, write_csv,
+    read_resources, required_seconds, save_delivery_figures, save_route_figure,
+    validate_template, write_csv,
 )
 
 
@@ -534,7 +535,10 @@ def check_plan(ctx: Context, plan: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def baseline_comparison(output_root: Path, data_hash: str) -> dict[str, Any] | None:
-    for directory in sorted(output_root.glob("q2_base_*_table"), reverse=True):
+    directories = [*(output_root / "0_baseline").glob("q2_base_*_table"),
+                   *output_root.glob("q2_base_*_table")]
+    for directory in sorted(directories, key=lambda path: path.stat().st_mtime,
+                            reverse=True):
         summary_path = directory / "Q2_运行摘要.json"
         if not summary_path.is_file():
             continue
@@ -674,6 +678,8 @@ def save_figures(figure_dir: Path, ctx: Context, plan: dict[str, Any],
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
+    plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "DejaVu Sans"]
+    plt.rcParams["axes.unicode_minus"] = False
 
     figure_dir.mkdir(parents=True)
     sorties, deliveries = plan["sorties"], plan["deliveries"]
@@ -723,35 +729,8 @@ def save_figures(figure_dir: Path, ctx: Context, plan: dict[str, Any],
     for extension in ("png", "pdf"):
         fig.savefig(figure_dir / f"Q2_硬时限余量.{extension}", dpi=220)
     plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(8, 7))
-    frame = pd.read_csv(ctx.data_run / "clean" / "nodes.csv", dtype={"node_id": str})
-    nodes = {str(row["node_id"]): (float(row["x_m"]) / 1000,
-                                   float(row["y_m"]) / 1000)
-             for row in frame.to_dict("records")}
-    for s in sorties:
-        sequence = ["O01", *s["route"].zones, "O01"]
-        x = [nodes[node][0] for node in sequence]
-        y = [nodes[node][1] for node in sequence]
-        ax.plot(x, y, color=colors[s["type_id"]],
-                alpha=0.53 if len(sequence) > 3 else 0.22,
-                lw=1.6 if len(sequence) > 3 else 0.9)
-    for node, (x, y) in nodes.items():
-        ax.scatter(x, y, s=48 if node == "O01" else 18,
-                   color="#222222" if node == "O01" else "#555555", zorder=5)
-        ax.annotate(node, (x, y), xytext=(3, 3), textcoords="offset points",
-                    fontsize=7)
-    ax.set_xlabel("Projected east (km)")
-    ax.set_ylabel("Projected north (km)")
-    ax.set_aspect("equal", adjustable="datalim")
-    ax.grid(alpha=0.2)
-    fig.legend(handles=[Patch(facecolor=colors[k], label=f"Type {k}")
-                        for k in sorted(colors)], loc="lower center", ncol=3,
-               frameon=False)
-    fig.subplots_adjust(bottom=0.11, left=0.13, right=0.98, top=0.98)
-    for extension in ("png", "pdf"):
-        fig.savefig(figure_dir / f"Q2_运输路线图.{extension}", dpi=220)
-    plt.close(fig)
+    save_delivery_figures(figure_dir, deliveries, plt)
+    save_route_figure(figure_dir, ctx.data_run, sorties, plt)
 
     fig, ax = plt.subplots(figsize=(10, 4.5))
     for kind in sorted(colors):
@@ -771,7 +750,9 @@ def save_figures(figure_dir: Path, ctx: Context, plan: dict[str, Any],
     (figure_dir / "图表说明.txt").write_text(
         "机电池时间线：彩色为架次占用，灰色为电池返航后的充电。\n"
         "硬时限余量：红色表示超时；零线以上才满足截止。\n"
-        "运输路线图：每条线对应一个架次；多区路线颜色更深。\n"
+        "逐箱交付进度：按逐箱交接完成时刻累计，虚线为硬截止。\n"
+        "交付硬时限对照：对角线下方满足硬截止。\n"
+        "运输路线图：投影坐标中的箭头为飞行方向，多区路线数字为访问顺序；重复路线合并。\n"
         "返航SOC：每架次返航时电量，虚线为20%下限。\n"
         f"本次独立验收状态：{summary['status']}。启发式搜索不证明全局最优。\n",
         encoding="utf-8")
@@ -797,8 +778,9 @@ def main() -> None:
         raise ValueError("求解期间输入数据发生改变")
     output_root = args.output_root.resolve() if args.output_root else CODE_DIR / "2_outputs"
     stamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    table_dir = output_root / f"q2_opt_{stamp}_table"
-    figure_dir = output_root / f"q2_opt_{stamp}_figure"
+    method_dir = output_root / "1_optimize"
+    table_dir = method_dir / f"q2_opt_{stamp}_table"
+    figure_dir = method_dir / f"q2_opt_{stamp}_figure"
     if table_dir.exists() or figure_dir.exists():
         raise FileExistsError("结果目录已存在，请稍后重试或指定新的 --output-root")
     summary = save_tables(table_dir, ctx, plan, seed_plan, search, checks, output_root)

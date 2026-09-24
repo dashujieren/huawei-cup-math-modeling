@@ -1,4 +1,4 @@
-"""D 题问题二基线：复用 Q1 同区 FFD 批次，排 8 架实体机与共享电池。
+"""D 题问题二基线：同区组批，A/B/C 三种机型参与简单列表排程。
 
 单次运行先写 Q2 官方格式表和验收表，再画实体机/电池及交付时限图。
 这是截止优先的事件排程基线，不是跨区联合优化；超时会明确标记为失败。
@@ -20,7 +20,7 @@ import pandas as pd
 from openpyxl import load_workbook
 
 from _0_pipeline import sha256, verify_ready
-from q1_0_baseline import CODE_DIR, PROJECT, _read_inputs, find_latest_validated_run, run_model, sortie_metrics
+from q1_0_baseline import CODE_DIR, PROJECT, _read_inputs, find_latest_validated_run, sortie_metrics
 
 
 TOL = 1e-7
@@ -126,64 +126,115 @@ def ordered_boxes(batch: dict[str, Any], boxes_by_id: dict[str, dict[str, Any]])
 
 
 def make_tasks(data_run: Path) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, Any]]:
-    q1 = run_model(data_run)
-    if any(check["status"] != "PASS" for check in q1["checks"]):
-        raise ValueError("问题一 FFD 输入未通过验收")
     boxes, models, arcs = _read_inputs(data_run)
     boxes_by_id = {str(box["box_id"]): box for box in boxes}
     if len(boxes_by_id) != 80:
         raise ValueError("货箱编号不唯一")
-    tasks = []
+    tasks: list[dict[str, Any]] = []
     seen: Counter[str] = Counter()
-    for batch in q1["ffd"]:
-        batch_id, zone, type_id = batch["batch_id"], batch["zone_id"], batch["type_id"]
-        if any(box_id not in boxes_by_id for box_id in batch["box_ids"]):
-            raise ValueError(f"{batch_id} 引用了未知货箱")
-        delivery_order = ordered_boxes(batch, boxes_by_id)
-        if any(str(box["zone_id"]) != zone for box in delivery_order):
-            raise ValueError(f"{batch_id} 混入其他服务区货箱")
-        seen.update(batch["box_ids"])
-        physical = sortie_metrics(models[type_id], arcs[("O01", zone)], arcs[(zone, "O01")], delivery_order)
+    by_zone: dict[str, list[dict[str, Any]]] = {}
+    for box in boxes:
+        by_zone.setdefault(str(box["zone_id"]), []).append(box)
+
+    def physical_for(kind: str, zone: str, group: list[dict[str, Any]]) -> dict[str, Any] | None:
+        model = models[kind]
+        mass = sum(float(box["mass_kg"]) for box in group)
+        volume = sum(float(box["volume_m3"]) for box in group)
+        # sortie_metrics 在返回 feasible=False 前会先计算航段能耗；超载必须在此拦住。
+        if (mass > float(model["max_payload_kg"]) + TOL or
+                volume > float(model["capacity_m3"]) + TOL):
+            return None
+        ordered = ordered_boxes({"box_ids": [str(b["box_id"]) for b in group]}, boxes_by_id)
+        physical = sortie_metrics(model, arcs[("O01", zone)], arcs[(zone, "O01")], ordered)
         if not physical["feasible"]:
-            raise ValueError(f"{batch_id} 不满足载重、体积或返航余量：{physical['failure_reasons']}")
-        for key in ("mass_kg", "volume_m3", "energy_kwh", "operation_s"):
-            if not math.isclose(float(physical[key]), float(batch[key]), rel_tol=0, abs_tol=TOL):
-                raise ValueError(f"{batch_id} 与问题一批次的 {key} 不一致")
+            return None
+        return {**physical,
+                "handoff_base_s": float(model["handoff_base_s"]),
+                "handoff_per_box_s": float(model["handoff_per_box_s"]),
+                "return_soc_min": float(model["return_soc_min"])}
+
+    def append_task(zone: str, group: list[dict[str, Any]], tier: str) -> None:
+        batch_id = f"Q{len(tasks) + 1:03d}"
+        delivery_order = ordered_boxes({"box_ids": [str(b["box_id"]) for b in group]}, boxes_by_id)
+        options = {kind: physical for kind in sorted(models)
+                   if (physical := physical_for(kind, zone, delivery_order)) is not None}
+        if not options:
+            raise ValueError(f"{batch_id} 对 A/B/C 均不满足载重、体积或返航余量")
+        seen.update(str(box["box_id"]) for box in delivery_order)
         for box in delivery_order:
             if source_bool(box["medical_bool"]) or source_bool(box["is_first_batch"]):
                 if optional_seconds(box["hard_deadline_s"]) is None:
                     raise ValueError(f"{box['box_id']} 缺少医疗或首批硬时限")
         deadlines = [optional_seconds(box["hard_deadline_s"]) for box in delivery_order]
         tasks.append({
-            "batch_id": batch_id, "zone_id": zone, "type_id": type_id,
-            "boxes": delivery_order, "physical": physical,
-            "handoff_base_s": float(models[type_id]["handoff_base_s"]),
-            "handoff_per_box_s": float(models[type_id]["handoff_per_box_s"]),
-            "return_soc_min": float(models[type_id]["return_soc_min"]),
+            "batch_id": batch_id, "zone_id": zone, "tier": tier,
+            "boxes": delivery_order, "options": options,
             "nearest_hard_s": min((d for d in deadlines if d is not None), default=math.inf),
             "nearest_expected_s": min(required_seconds(b["expected_s"], "期望时刻") for b in delivery_order),
         })
+
+    for zone in sorted(by_zone):
+        hard = [b for b in by_zone[zone] if optional_seconds(b["hard_deadline_s"]) is not None]
+        routine = sorted((b for b in by_zone[zone] if optional_seconds(b["hard_deadline_s"]) is None),
+                         key=lambda b: (-float(b["mass_kg"]), -float(b["volume_m3"]), str(b["box_id"])))
+        if hard:
+            append_task(zone, hard, "hard_same_zone")
+        bins: list[list[dict[str, Any]]] = []
+        for box in routine:
+            for group in bins:
+                if physical_for("C", zone, [*group, box]) is not None:
+                    group.append(box)
+                    break
+            else:
+                if physical_for("C", zone, [box]) is None:
+                    raise ValueError(f"{box['box_id']} 无法由 C 型机单独运送")
+                bins.append([box])
+        for group in bins:
+            append_task(zone, group, "routine_same_zone")
     if seen != Counter(boxes_by_id.keys()):
-        raise ValueError("问题一 FFD 未将 80 个货箱恰好分配一次")
-    return sorted(tasks, key=lambda t: (t["nearest_hard_s"], t["nearest_expected_s"], t["batch_id"])), boxes_by_id, q1
+        raise ValueError("基线未将 80 个货箱恰好分配一次")
+    return sorted(tasks, key=lambda t: (t["nearest_hard_s"], t["nearest_expected_s"], t["batch_id"])), boxes_by_id, {
+        "hard_group_tasks": sum(t["tier"] == "hard_same_zone" for t in tasks),
+        "routine_tasks": sum(t["tier"] == "routine_same_zone" for t in tasks),
+    }
 
 
 def schedule_baseline(tasks: list[dict[str, Any]], uavs: list[UAV],
                       batteries: list[Battery]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     sorties: list[dict[str, Any]] = []
     deliveries: list[dict[str, Any]] = []
+    used_types: set[str] = set()
     for task in tasks:
-        kind = task["type_id"]
-        physical = task["physical"]
-        choices = [
-            (max(uav.available_s, battery.available_s) + physical["operation_s"],
-             max(uav.available_s, battery.available_s), uav.uav_id, battery.battery_id, uav, battery)
-            for uav in uavs if uav.type_id == kind
-            for battery in batteries if battery.type_id == kind
-        ]
+        choices = []
+        for kind, physical in task["options"].items():
+            for uav in uavs:
+                if uav.type_id != kind:
+                    continue
+                for battery in batteries:
+                    if battery.type_id != kind:
+                        continue
+                    start = max(uav.available_s, battery.available_s)
+                    arrival = (start + physical["prep_s"] + physical["loading_s"] +
+                               physical["flight_out_s"])
+                    hard_late = []
+                    soft_late = 0.0
+                    for index, box in enumerate(task["boxes"], 1):
+                        complete = (arrival + physical["handoff_base_s"] +
+                                    index * physical["handoff_per_box_s"])
+                        hard = optional_seconds(box["hard_deadline_s"])
+                        if hard is not None and complete > hard + TOL:
+                            hard_late.append(complete - hard)
+                        if hard is None:
+                            soft_late += float(box["priority"]) * max(
+                                0.0, complete - required_seconds(box["expected_s"], str(box["box_id"])))
+                    # 三种机型都作为候选；同样满足硬时限时优先启用尚未使用的机型。
+                    rank = (len(hard_late), sum(hard_late), kind in used_types,
+                            soft_late, start + physical["operation_s"],
+                            physical["energy_kwh"], kind, uav.uav_id, battery.battery_id)
+                    choices.append((rank, kind, physical, start, uav, battery))
         if not choices:
-            raise ValueError(f"{kind} 型缺少可匹配实体机或电池")
-        _, start_s, _, _, uav, battery = min(choices, key=lambda x: x[:4])
+            raise ValueError(f"{task['batch_id']} 无可匹配机型、实体机或电池")
+        _, kind, physical, start_s, uav, battery = min(choices, key=lambda x: x[0])
         prep_end_s = start_s + physical["prep_s"]
         launch_s = prep_end_s + physical["loading_s"]
         arrival_s = launch_s + physical["flight_out_s"]
@@ -206,7 +257,8 @@ def schedule_baseline(tasks: list[dict[str, Any]], uavs: list[UAV],
         })
         for index, box in enumerate(task["boxes"], 1):
             # 基础交接只收取一次；逐箱交接时间由对应机型参数给定。
-            complete_s = arrival_s + task["handoff_base_s"] + index * task["handoff_per_box_s"]
+            complete_s = (arrival_s + physical["handoff_base_s"] +
+                          index * physical["handoff_per_box_s"])
             hard_s = optional_seconds(box["hard_deadline_s"])
             expected_s = required_seconds(box["expected_s"], f"{box['box_id']} 的期望时刻")
             deliveries.append({
@@ -219,6 +271,7 @@ def schedule_baseline(tasks: list[dict[str, Any]], uavs: list[UAV],
             })
         uav.available_s = return_s
         battery.available_s = charge_end_s
+        used_types.add(kind)
     return sorted(sorties, key=lambda s: (s["start_s"], s["batch_id"])), sorted(deliveries, key=lambda d: d["box_id"])
 
 
@@ -232,8 +285,10 @@ def check_plan(sorties: list[dict[str, Any]], deliveries: list[dict[str, Any]],
 
     add("all_80_boxes_once", Counter(d["box_id"] for d in deliveries) == Counter(boxes_by_id.keys()),
         f"deliveries={len(deliveries)}, unique={len({d['box_id'] for d in deliveries})}")
-    add("all_q1_batches_once", Counter(s["batch_id"] for s in sorties) ==
+    add("all_baseline_batches_once", Counter(s["batch_id"] for s in sorties) ==
         Counter(t["batch_id"] for t in tasks), f"sorties={len(sorties)}")
+    add("A_B_C_all_used", {s["type_id"] for s in sorties} == {"A", "B", "C"},
+        f"type_sorties={dict(Counter(s['type_id'] for s in sorties))}")
     uav_types = {u.uav_id: u.type_id for u in uavs}
     battery_types = {b.battery_id: b.type_id for b in batteries}
     battery_full_s = {b.battery_id: b.full_charge_s for b in batteries}
@@ -243,15 +298,18 @@ def check_plan(sorties: list[dict[str, Any]], deliveries: list[dict[str, Any]],
         batch_id = sortie["batch_id"]
         add(f"{batch_id}:same_type", uav_types[sortie["uav_id"]] ==
             battery_types[sortie["battery_id"]] == sortie["type_id"])
+        expected = tasks_by_id[batch_id]["options"].get(sortie["type_id"])
+        add(f"{batch_id}:assigned_type_feasible", expected is not None)
+        if expected is None:
+            continue
         add(f"{batch_id}:return_soc",
-            sortie["return_soc"] >= tasks_by_id[batch_id]["return_soc_min"] - TOL,
-            f"SOC={sortie['return_soc']:.9f}, minimum={tasks_by_id[batch_id]['return_soc_min']:.9f}")
+            sortie["return_soc"] >= expected["return_soc_min"] - TOL,
+            f"SOC={sortie['return_soc']:.9f}, minimum={expected['return_soc_min']:.9f}")
         add(f"{batch_id}:time_order", 0 <= sortie["start_s"] <= sortie["launch_s"] <=
             sortie["arrival_s"] <= sortie["handoff_end_s"] <= sortie["return_s"] <=
             sortie["charge_end_s"])
         add(f"{batch_id}:one_zone", all(boxes_by_id[box_id]["zone_id"] == sortie["zone_id"]
                                        for box_id in sortie["box_ids"]))
-        expected = tasks_by_id[batch_id]["physical"]
         add(f"{batch_id}:physical_replay", math.isclose(sortie["energy_kwh"],
             expected["energy_kwh"], rel_tol=0, abs_tol=TOL) and
             math.isclose(sortie["return_s"] - sortie["start_s"],
@@ -264,8 +322,9 @@ def check_plan(sorties: list[dict[str, Any]], deliveries: list[dict[str, Any]],
     for delivery in deliveries:
         task = tasks_by_id[delivery["batch_id"]]
         sortie = sorties_by_id[delivery["batch_id"]]
-        expected_delivery_s = (sortie["arrival_s"] + task["handoff_base_s"] +
-                               delivery["sequence"] * task["handoff_per_box_s"])
+        physical = task["options"][sortie["type_id"]]
+        expected_delivery_s = (sortie["arrival_s"] + physical["handoff_base_s"] +
+                               delivery["sequence"] * physical["handoff_per_box_s"])
         add(f"{delivery['box_id']}:delivery_replay", math.isclose(
             delivery["complete_s"], expected_delivery_s, rel_tol=0, abs_tol=TOL) and
             delivery["complete_s"] <= sortie["handoff_end_s"] + TOL)
@@ -302,9 +361,117 @@ def write_csv(path: Path, rows: list[dict[str, Any]], columns: list[str]) -> Non
     pd.DataFrame(rows, columns=columns).to_csv(path, index=False, encoding="utf-8-sig", float_format="%.12g")
 
 
+def save_delivery_figures(figure_dir: Path, deliveries: list[dict[str, Any]], plt: Any) -> None:
+    """用逐箱交接完成时刻展示进度和硬时限，不使用到站时刻。"""
+    ordered = sorted(deliveries, key=lambda row: (row["complete_s"], row["box_id"]))
+    hard = [row for row in ordered if row["hard_deadline_s"] is not None]
+    if not ordered or not hard:
+        raise ValueError("缺少逐箱交付记录或硬时限记录，无法绘制问题二进度图")
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    hours = [0.0, *(row["complete_s"] / 3600 for row in ordered)]
+    ax.step(hours, range(len(hours)), where="post", color="#2879B8", lw=2,
+            label="全部货箱")
+    hard_hours = [0.0, *(row["complete_s"] / 3600 for row in hard)]
+    ax.step(hard_hours, range(len(hard_hours)), where="post", color="#D98537",
+            lw=1.8, label="硬时限货箱")
+    for index, deadline in enumerate(sorted({row["hard_deadline_s"] for row in hard})):
+        ax.axvline(deadline / 3600, ls="--", lw=0.9, color="#777777",
+                   alpha=0.75, label="硬截止" if index == 0 else None)
+    ax.set(xlabel="从开始至交接完成（小时）", ylabel="累计完成交接箱数",
+           ylim=(0, len(ordered) + 3))
+    ax.grid(axis="y", alpha=0.22)
+    ax.legend(frameon=False, ncol=3)
+    fig.tight_layout()
+    for extension in ("png", "pdf"):
+        fig.savefig(figure_dir / f"Q2_逐箱交付进度.{extension}", dpi=220)
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(7.5, 6))
+    on_time = [row for row in hard if row["hard_slack_s"] >= -TOL]
+    late = [row for row in hard if row["hard_slack_s"] < -TOL]
+    for subset, color, label in ((on_time, "#2879B8", "按时交接"),
+                                 (late, "#C64F4F", "超时交接")):
+        if subset:
+            ax.scatter([row["hard_deadline_s"] / 3600 for row in subset],
+                       [row["complete_s"] / 3600 for row in subset],
+                       s=38, color=color, alpha=0.78, label=f"{label}（{len(subset)}箱）")
+    limit = max(max(row["hard_deadline_s"], row["complete_s"]) for row in hard) / 3600
+    ax.plot([0, limit * 1.04], [0, limit * 1.04], ls="--", lw=1,
+            color="#4D4D4D", label="交接完成 = 硬截止")
+    ax.set(xlabel="硬截止时刻（小时）", ylabel="交接完成时刻（小时）",
+           xlim=(0, limit * 1.04), ylim=(0, limit * 1.04))
+    ax.set_aspect("equal", adjustable="box")
+    ax.grid(alpha=0.2)
+    ax.legend(frameon=False, loc="upper left")
+    fig.tight_layout()
+    for extension in ("png", "pdf"):
+        fig.savefig(figure_dir / f"Q2_交付硬时限对照.{extension}", dpi=220)
+    plt.close(fig)
+
+
+def save_route_figure(figure_dir: Path, data_run: Path,
+                      sorties: list[dict[str, Any]], plt: Any) -> None:
+    """在同一投影坐标上画各机型实际飞行顺序，重复路线合并显示。"""
+    from matplotlib.patches import Patch
+
+    frame = pd.read_csv(data_run / "clean" / "nodes.csv", dtype={"node_id": str})
+    nodes = {str(row["node_id"]): (float(row["x_m"]) / 1000,
+                                   float(row["y_m"]) / 1000)
+             for row in frame.to_dict("records")}
+    colors = {"A": "#3A80C1", "B": "#27A275", "C": "#DB873F"}
+    routes: Counter[tuple[str, tuple[str, ...]]] = Counter()
+    for sortie in sorties:
+        if "route" in sortie:
+            zones = tuple(sortie["route"].zones)
+        elif "visit_order" in sortie:
+            zones = tuple(str(sortie["visit_order"]).split(">"))
+        else:
+            zones = (str(sortie["zone_id"]),)
+        routes[(sortie["type_id"], zones)] += 1
+
+    fig, ax = plt.subplots(figsize=(9, 7))
+    for (kind, zones), count in sorted(routes.items()):
+        sequence = ("O01", *zones, "O01")
+        for index, (start, end) in enumerate(zip(sequence, sequence[1:]), 1):
+            x0, y0 = nodes[start]
+            x1, y1 = nodes[end]
+            dx, dy = x1 - x0, y1 - y0
+            length = math.hypot(dx, dy)
+            if length <= TOL:
+                continue
+            # 相反方向的箭头落在航线两侧，往返重合时仍能辨认。
+            shift_x, shift_y = -dy / length * 0.08, dx / length * 0.08
+            x0, y0, x1, y1 = x0 + shift_x, y0 + shift_y, x1 + shift_x, y1 + shift_y
+            ax.plot((x0, x1), (y0, y1), color=colors[kind],
+                    lw=0.8 + 0.35 * math.sqrt(count),
+                    alpha=0.42 if len(zones) == 1 else 0.68, zorder=2)
+            ax.annotate("", xy=(x0 + 0.72 * dx, y0 + 0.72 * dy),
+                        xytext=(x0 + 0.55 * dx, y0 + 0.55 * dy),
+                        arrowprops={"arrowstyle": "-|>", "color": colors[kind],
+                                    "lw": 1.25, "mutation_scale": 10}, zorder=3)
+            if len(zones) > 1 and index <= len(zones):
+                ax.text(x0 + 0.43 * dx, y0 + 0.43 * dy, str(index),
+                        color=colors[kind], fontsize=7, weight="bold", zorder=4)
+    for node, (x, y) in nodes.items():
+        ax.scatter(x, y, s=62 if node == "O01" else 23,
+                   color="#222222" if node == "O01" else "#565656", zorder=5)
+        ax.annotate(node, (x, y), xytext=(3, 3),
+                    textcoords="offset points", fontsize=7, zorder=6)
+    ax.set(xlabel="投影东坐标（km）", ylabel="投影北坐标（km）")
+    ax.set_aspect("equal", adjustable="datalim")
+    ax.grid(alpha=0.2)
+    handles = [Patch(facecolor=colors[kind], label=f"{kind}型") for kind in colors]
+    ax.legend(handles=handles, loc="upper right", frameon=False, ncol=3)
+    fig.tight_layout()
+    for extension in ("png", "pdf"):
+        fig.savefig(figure_dir / f"Q2_运输路线图.{extension}", dpi=220)
+    plt.close(fig)
+
+
 def save_tables(table_dir: Path, data_run: Path, sorties: list[dict[str, Any]],
                 deliveries: list[dict[str, Any]], checks: list[dict[str, str]],
-                q1: dict[str, Any]) -> dict[str, Any]:
+                construction: dict[str, Any]) -> dict[str, Any]:
     if table_dir.exists():
         raise FileExistsError(f"不覆盖已有结果：{table_dir}")
     validate_template()
@@ -332,11 +499,14 @@ def save_tables(table_dir: Path, data_run: Path, sorties: list[dict[str, Any]],
                             key=lambda d: (d["complete_s"], d["box_id"]))
     summary = {
         "status": "PASS" if not failed else "FAIL",
-        "method": "Q1 same-zone FFD batches, hard-deadline-first list scheduling",
+        "method": "same-zone ABC-capable FFD + deadline-first list scheduling",
+        "baseline_method_id": "q2_baseline_abc_single_zone_v2",
         "baseline_not_optimized": True,
         "source_data_run": str(data_run),
         "source_manifest_sha256": sha256(data_run / "meta" / "validated_artifacts.json"),
-        "q1_batch_count": len(q1["ffd"]),
+        "hard_group_tasks": construction["hard_group_tasks"],
+        "routine_tasks": construction["routine_tasks"],
+        "type_sorties": dict(sorted(Counter(s["type_id"] for s in sorties).items())),
         "sorties": len(sorties), "delivered_boxes": len(deliveries),
         "uavs": 8, "batteries": 14,
         "makespan_s": max(s["return_s"] for s in sorties),
@@ -354,13 +524,14 @@ def save_tables(table_dir: Path, data_run: Path, sorties: list[dict[str, Any]],
         ),
         "battery_rule": "same-type shared pool; starts full; each used battery recharges to 100% before reuse",
         "charging_model": "two-stage 0-90% takes 65% of T_full; 90-100% takes 35%; parallel charging allowed",
-        "note": "A failed hard deadline means this fixed Q1 FFD scheduling baseline failed; it does not prove Q2 infeasible.",
+        "note": "A failed hard deadline means this simple three-type baseline failed; it does not prove Q2 infeasible.",
     }
     (table_dir / "Q2_运行摘要.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     (table_dir / "Q2_运行说明.txt").write_text(
-        "问题二单区批次排程基线：复用 Q1 FFD 的批次和物理计算器，不做跨区路线优化。\n"
-        "按最紧硬时限、期望时刻、批次号排序；同机型中选最早返航的实体机和满电池。\n"
+        "问题二基线：所有路线只访问一个服务区；硬时限箱同区组批，普通箱同区首次适应组批。\n"
+        "每架次同时检查 A/B/C 的载荷、体积、能耗与返航余量，再按硬时限优先列表排程。\n"
+        "三种机型均需实际使用；没有固定规定紧急箱只能由 A 型机运送。\n"
         "Q2_运输架次.csv 与 Q2_逐箱交付.csv 的列名与官方模板一致。\n"
         "逐箱交付时刻包含准备、装载、去程飞行、基础交接及本箱之前全部逐箱交接时间。\n"
         "电池返航后按官方两阶段规则充至 100% 才可复用；库存 6/4/4 已含初装。\n"
@@ -386,6 +557,8 @@ def save_figures(figure_dir: Path, sorties: list[dict[str, Any]],
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.patches import Patch
+    plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "DejaVu Sans"]
+    plt.rcParams["axes.unicode_minus"] = False
 
     figure_dir.mkdir(parents=True)
     uav_ids = sorted(u.uav_id for u in uavs)
@@ -433,22 +606,27 @@ def save_figures(figure_dir: Path, sorties: list[dict[str, Any]],
     for extension in ("png", "pdf"):
         fig.savefig(figure_dir / f"Q2_硬时限余量.{extension}", dpi=220)
     plt.close(fig)
+    save_delivery_figures(figure_dir, deliveries, plt)
+    save_route_figure(figure_dir, Path(summary["source_data_run"]), sorties, plt)
     (figure_dir / "图表说明.txt").write_text(
         "Q2_机电池时间线：上图为 8 架实体机占用，下图为共享电池占用与充电。\n"
         "Q2_硬时限余量：每个有硬截止的箱子以截止时刻减实际交付时刻作图；红色为超时。\n"
+        "Q2_逐箱交付进度：累计交接完成箱数；虚线为硬截止时刻。\n"
+        "Q2_交付硬时限对照：每箱以交接完成时刻与硬截止比较；点在对角线下方为按时。\n"
+        "Q2_运输路线图：投影坐标下的飞行方向，重复路线合并；多区路线数字为访问顺序。\n"
         f"本次基线状态：{summary['status']}；如为 FAIL，图仅用于定位冲突，不能作为可行方案。\n",
         encoding="utf-8")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="D 题问题二：同区批次、实体机和共享电池排程基线")
+    parser = argparse.ArgumentParser(description="D 题问题二：A/B/C 同区组批与共享电池列表排程基线")
     parser.add_argument("--data-run", type=Path, help="已验收的数据运行目录；默认最新一次")
     parser.add_argument("--output-root", type=Path, help="结果根目录；默认 code/2_outputs")
     args = parser.parse_args()
     data_run = args.data_run.resolve() if args.data_run else find_latest_validated_run()
     if not verify_ready(data_run):
         raise ValueError(f"数据目录未通过验收：{data_run}")
-    tasks, boxes_by_id, q1 = make_tasks(data_run)
+    tasks, boxes_by_id, construction = make_tasks(data_run)
     uavs, batteries = read_resources(data_run)
     sorties, deliveries = schedule_baseline(tasks, uavs, batteries)
     checks = check_plan(sorties, deliveries, tasks, uavs, batteries, boxes_by_id)
@@ -456,11 +634,12 @@ def main() -> None:
         raise ValueError("排程期间输入数据发生改变")
     output_root = args.output_root.resolve() if args.output_root else CODE_DIR / "2_outputs"
     stamp = datetime.now().strftime("%y%m%d_%H%M%S")
-    table_dir = output_root / f"q2_base_{stamp}_table"
-    figure_dir = output_root / f"q2_base_{stamp}_figure"
+    method_dir = output_root / "0_baseline"
+    table_dir = method_dir / f"q2_base_{stamp}_table"
+    figure_dir = method_dir / f"q2_base_{stamp}_figure"
     if table_dir.exists() or figure_dir.exists():
         raise FileExistsError("本次结果目录已存在；请稍后重试或指定新的 --output-root")
-    summary = save_tables(table_dir, data_run, sorties, deliveries, checks, q1)
+    summary = save_tables(table_dir, data_run, sorties, deliveries, checks, construction)
     save_figures(figure_dir, sorties, deliveries, uavs, batteries, summary)
     (table_dir / "Q2_基线状态.txt").write_text(
         f"{summary['status']}\nfirst_failure={summary['first_failure']}\n"

@@ -1,3 +1,0 @@
-FAIL
-first_failure={'check_id': 'S007-MED-01:hard_deadline', 'status': 'FAIL', 'detail': 'delivered=4457.478s, deadline=3600.000s, slack=-857.478s'}
-first_hard_conflict={'box_id': 'S007-MED-01', 'delivered_s': 4457.477641737247, 'deadline_s': 3600.0}

@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "method": "zero-lateness variable-neighborhood energy search",
+  "global_optimality_proven": false,
+  "source_data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260923_213829",
+  "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+  "sorties": 18,
+  "delivered_boxes": 80,
+  "multi_zone_sorties": 8,
+  "uavs_available": 8,
+  "batteries_available": 14,
+  "uavs_used": 8,
+  "batteries_used": 12,
+  "hard_deadline_boxes": 31,
+  "hard_deadline_violations": 0,
+  "first_failure": null,
+  "makespan_s": 8734.760453577233,
+  "total_energy_kwh": 64.20836219065416,
+  "soft_weighted_lateness_s": 0.0,
+  "seed_plan_metrics": {
+    "hard_deadline_violations": 0,
+    "soft_weighted_lateness_s": 0.0,
+    "makespan_s": 8324.553976449792,
+    "total_energy_kwh": 68.74972430455739,
+    "sorties": 21
+  },
+  "search": {
+    "seconds": 180.00001690000136,
+    "proposals": 156833,
+    "feasible_neighbors": 47467,
+    "improvements": 48,
+    "seed": 20260924,
+    "global_optimality_proven": false
+  },
+  "battery_rule": "same-type pool, initially full, recharge to 100% before reuse",
+  "note": "PASS is a verified feasible heuristic solution, not a proof of global optimum.",
+  "warm_start": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\2_outputs\\3_optimize\\q2_opt3_260924_142627_table",
+  "starting_energy_kwh": 68.74972430455739,
+  "energy_change_kwh": -4.541362113903233
+}

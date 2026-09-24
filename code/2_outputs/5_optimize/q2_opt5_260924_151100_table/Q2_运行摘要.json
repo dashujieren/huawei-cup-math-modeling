@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "method": "route-pool set partitioning and feasible scheduling",
+  "global_optimality_proven": false,
+  "source_data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260923_213829",
+  "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+  "sorties": 19,
+  "delivered_boxes": 80,
+  "multi_zone_sorties": 5,
+  "uavs_available": 8,
+  "batteries_available": 14,
+  "uavs_used": 8,
+  "batteries_used": 12,
+  "hard_deadline_boxes": 31,
+  "hard_deadline_violations": 0,
+  "first_failure": null,
+  "makespan_s": 8644.651181809917,
+  "total_energy_kwh": 62.988983915478855,
+  "soft_weighted_lateness_s": 0.0,
+  "seed_plan_metrics": {
+    "hard_deadline_violations": 0,
+    "soft_weighted_lateness_s": 0.0,
+    "makespan_s": 8734.760453577233,
+    "total_energy_kwh": 64.20836219065416,
+    "sorties": 18
+  },
+  "search": {
+    "seconds": 90.0,
+    "route_pool_size": 1200,
+    "master_runs": 3241,
+    "route_pool_complete": false,
+    "global_optimality_proven": false
+  },
+  "battery_rule": "same-type pool, initially full, recharge to 100% before reuse",
+  "note": "MILP bounds apply only to the generated route pool and omit resource calendars; full Q2 global optimality is not certified.",
+  "route_pool_complete": false,
+  "profiles": {
+    "time": {
+      "makespan_s": 8324.553976449792,
+      "energy_kwh": 68.74972430455739,
+      "sorties": 21
+    },
+    "energy": {
+      "makespan_s": 8644.651181809917,
+      "energy_kwh": 62.988983915478855,
+      "sorties": 19
+    },
+    "sorties": {
+      "makespan_s": 8734.760453577233,
+      "energy_kwh": 64.20836219065416,
+      "sorties": 18
+    }
+  }
+}
