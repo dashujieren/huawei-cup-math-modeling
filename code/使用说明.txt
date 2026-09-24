@@ -1,6 +1,6 @@
 D 题第一问代码使用说明
 
-在 D题 目录打开项目，使用 code\.venv\Scripts\python.exe 作为 Python 解释器。
+在仓库根目录打开项目，使用 code\.venv\Scripts\python.exe 作为 Python 解释器；先按 code\requirements.txt 安装依赖。
 原始附件和结果提交模板位于 0_3_数据。
 
 按顺序运行（每个脚本只需运行一次）：
@@ -13,7 +13,9 @@ D 题第一问代码使用说明
 .\code\.venv\Scripts\python.exe .\code\q1_0_baseline.py
 .\code\.venv\Scripts\python.exe .\code\q1_3_optimize.py
 
-tests\0_data_pipeline_test.py、tests\q1_1_baseline_test.py 和 tests\q1_4_optimize_test.py 是检查文件。
+数据处理、第一问基线和优化的检查已内置于各自脚本，不再需要单独的 test.py 文件。
+只运行检查、不生成正式结果时，在上述任一命令后加 --self-test；例如：
+.\code\.venv\Scripts\python.exe .\code\q1_0_baseline.py --self-test
 数据验收看 meta\READY.txt；基线和优化结果分别看 Q1_READY.txt、Q1_OPT_READY.txt。
 原有 code\outputs 和 D题\figures 是同步前的历史结果，已保留；新脚本不会读取它们。
 
