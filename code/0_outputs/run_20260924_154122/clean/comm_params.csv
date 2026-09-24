@@ -1,0 +1,15 @@
+category,parameter_name,symbol,value,source_file,source_sheet,source_row,unit
+传播参数,载波频率（MHz）,f,2400,通信链路参数.xlsx,数据,3,MHz
+传播参数,系统损耗（dB）,Lsys,3,通信链路参数.xlsx,数据,4,dB
+传播参数,地形遮挡附加损耗（dB）,Lobs,10,通信链路参数.xlsx,数据,5,dB
+接收参数,接收灵敏度（dBm）,Psens,-98,通信链路参数.xlsx,数据,6,dBm
+接收参数,衰落裕量（dB）,M,8,通信链路参数.xlsx,数据,7,dB
+运输无人机,发射功率（dBm）,Pt,20,通信链路参数.xlsx,数据,8,dBm
+运输无人机,天线增益（dBi）,G,3,通信链路参数.xlsx,数据,9,dBi
+中继接入端,发射功率（dBm）,Pt,20,通信链路参数.xlsx,数据,10,dBm
+中继接入端,天线增益（dBi）,G,6,通信链路参数.xlsx,数据,11,dBi
+中继回传端,发射功率（dBm）,Pt,19,通信链路参数.xlsx,数据,12,dBm
+中继回传端,天线增益（dBi）,G,8,通信链路参数.xlsx,数据,13,dBi
+固定网关 G01,发射功率（dBm）,Pt,27,通信链路参数.xlsx,数据,14,dBm
+固定网关 G01,天线增益（dBi）,G,12,通信链路参数.xlsx,数据,15,dBi
+固定网关 G01,天线离地高度（m）,hG,20,通信链路参数.xlsx,数据,16,m

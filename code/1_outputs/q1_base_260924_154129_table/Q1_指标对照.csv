@@ -1,0 +1,3 @@
+﻿baseline,sorties,delivered_boxes,total_mass_kg,total_volume_m3,total_energy_kwh,cumulative_operation_s,cumulative_flight_s,min_return_soc_pct
+single_box,80,80,758,2.011,138.048047291,120956.116529,80156.1165289,35.2657211658
+ffd,18,80,758,2.011,59.542407332,32788.0926769,19288.0926769,20.9477350539

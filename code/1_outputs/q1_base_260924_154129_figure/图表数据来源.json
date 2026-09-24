@@ -1,0 +1,45 @@
+{
+  "source_result_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\1_outputs\\q1_base_260924_154129_table",
+  "source_sha256": {
+    "Q1_安全载荷.csv": "0867adc46cd78502114b6125fecedd7caed223983b695f4adbe40d1cdff0d97c",
+    "Q1_单箱保底.csv": "19f26f35074bb0a7e0ec73b9b1bf892d9677a7a7358c070a30bdb142aebe0fdf",
+    "Q1_单点组批.csv": "1951cf8b80f5bd6e26122d9482422e9f32163ee060d96c412c52e232a4f96506",
+    "Q1_指标对照.csv": "7177f2548c891ef87e18a5914fecdea9242210377312610341d4603e69c6ef66",
+    "Q1_验收检查.csv": "bd35c308717fe23522ca3f97e3f77b07643b41969a5bc4b80924a9cb3643fe22",
+    "Q1_运行摘要.json": "22f4af9cdf6156ecbfd77f0d04935148011d1b328ccfa1f3f6785fa451a4d422",
+    "Q1_READY.txt": "32a9ecdbc81d9085302869455fd21912eb286388a65786dca176f66ccea63270"
+  },
+  "source_qa_pass_count": 345,
+  "model_status": "feasible baseline, not optimized",
+  "transformations": [
+    "cumulative_operation_s / 3600 -> hours",
+    "percentage decrease = 100*(1-FFD/single_box)",
+    "heatmap ratio = q_max_kg / rated_payload_kg",
+    "no filtering or smoothing"
+  ],
+  "comparison_reduction_pct": {
+    "架次数": 77.5,
+    "总运输能耗": 56.86834511575025,
+    "累计作业时间": 72.89257160547243
+  },
+  "payload_summary": {
+    "energy_limited_cells": [
+      "B-S008",
+      "C-S002",
+      "C-S003",
+      "C-S004",
+      "C-S008",
+      "C-S012"
+    ],
+    "rated_cells": 39,
+    "unreachable_cells": 0
+  },
+  "font": "SimHei",
+  "matplotlib_version": "3.11.2",
+  "artifacts": [
+    "图1_两种可行基线对比.pdf",
+    "图1_两种可行基线对比.png",
+    "图2_各区安全载荷边界.pdf",
+    "图2_各区安全载荷边界.png"
+  ]
+}

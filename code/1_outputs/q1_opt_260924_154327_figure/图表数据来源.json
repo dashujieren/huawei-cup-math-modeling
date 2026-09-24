@@ -1,0 +1,17 @@
+{
+  "source_result_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\1_outputs\\q1_opt_260924_154327_table",
+  "source_metrics_sha256": "d942d39b803998f7608788459489e218411f4778890547244e574ae8bd445bbf",
+  "source_qa_passed": 635,
+  "transformation": "cumulative_operation_s / 3600 -> hours; no filtering except excluding the 80-sortie fallback from the local-scale chart",
+  "shown_scenarios": [
+    "ffd",
+    "18架_能耗最低",
+    "18架_时间最短",
+    "19架_能耗最低",
+    "19架_时间最短",
+    "19架_时间约束折中"
+  ],
+  "excluded_from_figure": "single_box is 80 sorties and 138 kWh; excluded from local-scale optimizer comparison but retained in underlying CSV",
+  "axes": "local point-plot ranges, not zero-based bars",
+  "matplotlib_version": "3.11.2"
+}

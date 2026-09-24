@@ -1,0 +1,967 @@
+{
+  "format": "UTF-8 CSV; empty field means not applicable, not zero",
+  "coordinate_systems": {
+    "lon_deg/lat_deg": "EPSG:4326",
+    "x_m/y_m": "EPSG:32649"
+  },
+  "time_origin": "all deadline and schedule values are seconds after common t=0",
+  "soc": "0-1 internally; *_pct fields preserve original percent values",
+  "source": "official D-problem attachments; source_row is original Excel row",
+  "files": {
+    "nodes.csv": {
+      "key": "node_id",
+      "nullable": [
+        "population (O01 only)"
+      ],
+      "units": "lon/lat degree; x/y/elevation m",
+      "fields": {
+        "node_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": [
+            "调度中心编号",
+            "服务区编号"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "name": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": [
+            "调度中心名称",
+            "服务区名称"
+          ]
+        },
+        "lon_deg": {
+          "type": "number",
+          "unit": "degree",
+          "nullable": false,
+          "source_column": [
+            "经度（°）"
+          ]
+        },
+        "lat_deg": {
+          "type": "number",
+          "unit": "degree",
+          "nullable": false,
+          "source_column": [
+            "纬度（°）"
+          ]
+        },
+        "ground_elev_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": [
+            "海拔（m）"
+          ]
+        },
+        "x_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "y_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "operation_alt_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "population": {
+          "type": "integer",
+          "unit": "count",
+          "nullable": true,
+          "source_column": [
+            "本次需保障人口（人）"
+          ]
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "boxes.csv": {
+      "key": "box_id",
+      "foreign_key": "zone_id -> nodes.node_id",
+      "nullable": [
+        "first_deadline_s",
+        "hard_deadline_s"
+      ],
+      "units": "mass kg; volume m3; time s",
+      "fields": {
+        "box_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "货箱编号"
+        },
+        "zone_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "服务区编号"
+        },
+        "item_type": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "物资类型"
+        },
+        "mass_kg": {
+          "type": "number",
+          "unit": "kg",
+          "nullable": false,
+          "source_column": "单箱质量（kg）"
+        },
+        "volume_m3": {
+          "type": "number",
+          "unit": "m³",
+          "nullable": false,
+          "source_column": "单箱体积（m³）"
+        },
+        "is_first_batch": {
+          "type": "boolean",
+          "unit": "",
+          "nullable": false,
+          "source_column": "是否首批保障"
+        },
+        "first_deadline_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": true,
+          "source_column": "首批截止时间（s）"
+        },
+        "expected_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "期望送达时间（s）"
+        },
+        "priority": {
+          "type": "number",
+          "unit": "dimensionless",
+          "nullable": false,
+          "source_column": "应急优先系数"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "medical_bool": {
+          "type": "boolean",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "hard_deadline_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": true,
+          "source_column": "derived"
+        }
+      }
+    },
+    "demand_summary.csv": {
+      "key": [
+        "zone_id",
+        "item_type"
+      ],
+      "nullable": [
+        "first_deadline_s"
+      ],
+      "units": "mass kg; volume m3; time s",
+      "fields": {
+        "zone_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "服务区编号"
+        },
+        "item_type": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "物资类型"
+        },
+        "total_boxes": {
+          "type": "integer",
+          "unit": "count",
+          "nullable": false,
+          "source_column": "总需求箱数"
+        },
+        "first_boxes": {
+          "type": "integer",
+          "unit": "count",
+          "nullable": false,
+          "source_column": "首批必须送达箱数"
+        },
+        "unit_mass_kg": {
+          "type": "number",
+          "unit": "kg",
+          "nullable": false,
+          "source_column": "单箱质量（kg）"
+        },
+        "unit_volume_m3": {
+          "type": "number",
+          "unit": "m³",
+          "nullable": false,
+          "source_column": "单箱体积（m³）"
+        },
+        "priority": {
+          "type": "number",
+          "unit": "dimensionless",
+          "nullable": false,
+          "source_column": "应急优先系数"
+        },
+        "first_deadline_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": true,
+          "source_column": "首批截止时间（s）"
+        },
+        "expected_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "期望送达时间（s）"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "transport_types.csv": {
+      "key": "type_id",
+      "units": "mass kg; volume m3; speed m/s; range m; energy kWh; time s",
+      "fields": {
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "name": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型名称"
+        },
+        "empty_mass_kg": {
+          "type": "number",
+          "unit": "kg",
+          "nullable": false,
+          "source_column": "含电池空载总质量（kg）"
+        },
+        "max_payload_kg": {
+          "type": "number",
+          "unit": "kg",
+          "nullable": false,
+          "source_column": "最大载货质量（kg）"
+        },
+        "capacity_m3": {
+          "type": "number",
+          "unit": "m³",
+          "nullable": false,
+          "source_column": "可用装载体积（m³）"
+        },
+        "cruise_speed_mps": {
+          "type": "number",
+          "unit": "m/s",
+          "nullable": false,
+          "source_column": "计划巡航速度（m/s）"
+        },
+        "range_empty_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "空载标准航程（m）"
+        },
+        "range_full_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "满载标准航程（m）"
+        },
+        "energy_use_kwh": {
+          "type": "number",
+          "unit": "kWh",
+          "nullable": false,
+          "source_column": "电池可用能量（kWh）"
+        },
+        "return_soc_min_pct": {
+          "type": "number",
+          "unit": "%",
+          "nullable": false,
+          "source_column": "返航电量下限（%）"
+        },
+        "prep_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "工位固定准备时间（s）"
+        },
+        "load_per_box_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "每箱装载时间（s）"
+        },
+        "handoff_base_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "接收点基础交接时间（s）"
+        },
+        "handoff_per_box_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "每箱增加交接时间（s）"
+        },
+        "climb_speed_mps": {
+          "type": "number",
+          "unit": "m/s",
+          "nullable": false,
+          "source_column": "最大爬升速度（m/s）"
+        },
+        "descent_speed_mps": {
+          "type": "number",
+          "unit": "m/s",
+          "nullable": false,
+          "source_column": "最大下降速度（m/s）"
+        },
+        "climb_efficiency": {
+          "type": "number",
+          "unit": "",
+          "nullable": false,
+          "source_column": "爬升能耗效率"
+        },
+        "descent_efficiency": {
+          "type": "number",
+          "unit": "",
+          "nullable": false,
+          "source_column": "下降能耗效率"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "return_soc_min": {
+          "type": "number",
+          "unit": "dimensionless",
+          "nullable": false,
+          "source_column": "derived"
+        }
+      }
+    },
+    "transport_uavs.csv": {
+      "key": "uav_id",
+      "foreign_key": "type_id -> transport_types.type_id",
+      "fields": {
+        "uav_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "无人机编号"
+        },
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "initial_site": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "初始位置"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "battery_pool.csv": {
+      "key": "type_id",
+      "units": "stock count; charge time s",
+      "fields": {
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "stock_qty": {
+          "type": "integer",
+          "unit": "count",
+          "nullable": false,
+          "source_column": "共享电池组总数（组）"
+        },
+        "full_charge_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "等效完全充电时间（s）"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "battery_units.csv": {
+      "key": "battery_id",
+      "foreign_key": "type_id -> battery_pool.type_id",
+      "fields": {
+        "battery_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "initial_soc": {
+          "type": "number",
+          "unit": "dimensionless",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "relay_type.csv": {
+      "key": "type_id",
+      "units": "mass kg; speed m/s; power kW; energy kWh; time s",
+      "fields": {
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "name": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型名称"
+        },
+        "empty_mass_kg": {
+          "type": "number",
+          "unit": "kg",
+          "nullable": false,
+          "source_column": "含能源组件空载总质量（kg）"
+        },
+        "module_mass_kg": {
+          "type": "number",
+          "unit": "kg",
+          "nullable": false,
+          "source_column": "中继通信模块质量（kg）"
+        },
+        "takeoff_mass_kg": {
+          "type": "number",
+          "unit": "kg",
+          "nullable": false,
+          "source_column": "计划起飞总质量（kg）"
+        },
+        "cruise_speed_mps": {
+          "type": "number",
+          "unit": "m/s",
+          "nullable": false,
+          "source_column": "计划巡航速度（m/s）"
+        },
+        "cruise_power_kw": {
+          "type": "number",
+          "unit": "kW",
+          "nullable": false,
+          "source_column": "巡航功率（kW）"
+        },
+        "energy_use_kwh": {
+          "type": "number",
+          "unit": "kWh",
+          "nullable": false,
+          "source_column": "能源组件可用能量（kWh）"
+        },
+        "return_soc_min_pct": {
+          "type": "number",
+          "unit": "%",
+          "nullable": false,
+          "source_column": "返航电量下限（%）"
+        },
+        "prep_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "工位固定准备时间（s）"
+        },
+        "link_setup_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "建链时间（s）"
+        },
+        "turnaround_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "架次周转时间（s）"
+        },
+        "climb_speed_mps": {
+          "type": "number",
+          "unit": "m/s",
+          "nullable": false,
+          "source_column": "最大爬升速度（m/s）"
+        },
+        "descent_speed_mps": {
+          "type": "number",
+          "unit": "m/s",
+          "nullable": false,
+          "source_column": "最大下降速度（m/s）"
+        },
+        "climb_efficiency": {
+          "type": "number",
+          "unit": "",
+          "nullable": false,
+          "source_column": "爬升能耗效率"
+        },
+        "descent_efficiency": {
+          "type": "number",
+          "unit": "",
+          "nullable": false,
+          "source_column": "下降能耗效率"
+        },
+        "hover_power_kw": {
+          "type": "number",
+          "unit": "kW",
+          "nullable": false,
+          "source_column": "悬停功率（kW）"
+        },
+        "comm_extra_power_kw": {
+          "type": "number",
+          "unit": "kW",
+          "nullable": false,
+          "source_column": "通信附加功率（kW）"
+        },
+        "max_hover_agl_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "最大悬停离地高度（m）"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "return_soc_min": {
+          "type": "number",
+          "unit": "dimensionless",
+          "nullable": false,
+          "source_column": "derived"
+        }
+      }
+    },
+    "relay_uavs.csv": {
+      "key": "uav_id",
+      "foreign_key": "type_id -> relay_type.type_id",
+      "fields": {
+        "uav_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "中继无人机编号"
+        },
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "initial_site": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "初始位置"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "relay_energy_pool.csv": {
+      "key": "type_id",
+      "units": "stock count; charge time s",
+      "fields": {
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "stock_qty": {
+          "type": "integer",
+          "unit": "count",
+          "nullable": false,
+          "source_column": "共享能源组件总数（组）"
+        },
+        "full_charge_s": {
+          "type": "number",
+          "unit": "s",
+          "nullable": false,
+          "source_column": "等效完全充电时间（s）"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "relay_energy_units.csv": {
+      "key": "unit_id",
+      "foreign_key": "type_id -> relay_energy_pool.type_id",
+      "fields": {
+        "unit_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "type_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "机型编号"
+        },
+        "initial_soc": {
+          "type": "number",
+          "unit": "dimensionless",
+          "nullable": false,
+          "source_column": "derived"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        }
+      }
+    },
+    "comm_params.csv": {
+      "key": [
+        "category",
+        "parameter_name"
+      ],
+      "units": "per-row unit field",
+      "fields": {
+        "category": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "参数类别"
+        },
+        "parameter_name": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "参数名称"
+        },
+        "symbol": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "符号"
+        },
+        "value": {
+          "type": "number",
+          "unit": "see unit column",
+          "nullable": false,
+          "source_column": "参数值"
+        },
+        "source_file": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_sheet": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "source_row": {
+          "type": "integer",
+          "unit": "",
+          "nullable": false,
+          "source_column": "Excel provenance"
+        },
+        "unit": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived"
+        }
+      }
+    },
+    "arc_geometry.csv": {
+      "key": [
+        "from_id",
+        "to_id"
+      ],
+      "units": "distance/elevation m",
+      "note": "no fixed-load energy",
+      "fields": {
+        "from_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "to_id": {
+          "type": "string",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "distance_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "start_alt_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "end_alt_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": false,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "max_dsm_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": true,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "cruise_alt_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": true,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "climb_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": true,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "descent_m": {
+          "type": "number",
+          "unit": "m",
+          "nullable": true,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "pixels_traversed": {
+          "type": "integer",
+          "unit": "count",
+          "nullable": false,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "valid_flag": {
+          "type": "boolean",
+          "unit": "",
+          "nullable": false,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        },
+        "invalid_reason": {
+          "type": "string",
+          "unit": "",
+          "nullable": true,
+          "source_column": "derived from nodes.csv and official DEM.mat"
+        }
+      }
+    }
+  },
+  "geometry_convention": "Raster crossing follows a straight line in source lon/lat; distance_m is the Euclidean distance between UTM EPSG:32649 projected endpoints.",
+  "gateway_config": "meta/gateway.json: G01 is fixed at O01 with hG antenna height"
+}

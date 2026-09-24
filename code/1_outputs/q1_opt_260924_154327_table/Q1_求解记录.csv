@@ -1,0 +1,6 @@
+﻿status,objective,exact_sorties,time_cap_s,objective_value,dual_bound,mip_gap,node_count,elapsed_s,message,scenario,selected_sorties
+optimal,energy,18,,59.1316692416,59.1316692416,1.08146526284e-15,1,20.6240282,Optimization terminated successfully. (HiGHS Status 7: Optimal),18架_能耗最低,18
+optimal,time,18,,32776.0926769,32776.0926769,0,1,29.9541173,Optimization terminated successfully. (HiGHS Status 7: Optimal),18架_时间最短,18
+optimal,energy,19,,59.0343135321,59.0343135321,0,1,10.5570637,Optimization terminated successfully. (HiGHS Status 7: Optimal),19架_能耗最低,19
+optimal,time,19,,33784.5163271,33784.5163271,0,309,35.0852599,Optimization terminated successfully. (HiGHS Status 7: Optimal),19架_时间最短,19
+optimal,energy,19,34112.2907669,59.1572900424,59.1572900424,0,1,14.7769458,Optimization terminated successfully. (HiGHS Status 7: Optimal),19架_时间约束折中,19

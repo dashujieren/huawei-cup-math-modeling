@@ -1,7 +1,5 @@
 .venv/
 outputs/
-0_outputs/
-1_outputs/
 __pycache__/
 .pytest_cache/
 *.pyc
