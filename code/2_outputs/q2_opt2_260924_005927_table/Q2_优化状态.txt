@@ -1,0 +1,3 @@
+PASS
+first_failure=None
+global_optimality_proven=False

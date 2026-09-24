@@ -1,0 +1,12 @@
+{
+  "gateway_id": "G01",
+  "base_node_id": "O01",
+  "lon_deg": 109.2308517,
+  "lat_deg": 23.0085095,
+  "x_m": 318686.2012849663,
+  "y_m": 2545556.1393078705,
+  "ground_elev_m": 127.7,
+  "antenna_agl_m": 20.0,
+  "antenna_abs_m": 147.7,
+  "source": "O01 coordinates/elevation plus communication parameter hG"
+}

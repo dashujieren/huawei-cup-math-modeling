@@ -1,0 +1,244 @@
+﻿check_id,status,detail
+all_80_boxes_once,PASS,"deliveries=80, unique=80"
+all_q1_batches_once,PASS,sorties=18
+F001:same_type,PASS,
+F001:return_soc,PASS,"SOC=0.625527676, minimum=0.200000000"
+F001:time_order,PASS,
+F001:one_zone,PASS,
+F001:physical_replay,PASS,
+F001:charging_replay,PASS,
+F002:same_type,PASS,
+F002:return_soc,PASS,"SOC=0.635301076, minimum=0.200000000"
+F002:time_order,PASS,
+F002:one_zone,PASS,
+F002:physical_replay,PASS,
+F002:charging_replay,PASS,
+F013:same_type,PASS,
+F013:return_soc,PASS,"SOC=0.544202847, minimum=0.200000000"
+F013:time_order,PASS,
+F013:one_zone,PASS,
+F013:physical_replay,PASS,
+F013:charging_replay,PASS,
+F015:same_type,PASS,
+F015:return_soc,PASS,"SOC=0.311900280, minimum=0.200000000"
+F015:time_order,PASS,
+F015:one_zone,PASS,
+F015:physical_replay,PASS,
+F015:charging_replay,PASS,
+F003:same_type,PASS,
+F003:return_soc,PASS,"SOC=0.214897203, minimum=0.200000000"
+F003:time_order,PASS,
+F003:one_zone,PASS,
+F003:physical_replay,PASS,
+F003:charging_replay,PASS,
+F016:same_type,PASS,
+F016:return_soc,PASS,"SOC=0.543811542, minimum=0.200000000"
+F016:time_order,PASS,
+F016:one_zone,PASS,
+F016:physical_replay,PASS,
+F016:charging_replay,PASS,
+F009:same_type,PASS,
+F009:return_soc,PASS,"SOC=0.675247408, minimum=0.200000000"
+F009:time_order,PASS,
+F009:one_zone,PASS,
+F009:physical_replay,PASS,
+F009:charging_replay,PASS,
+F017:same_type,PASS,
+F017:return_soc,PASS,"SOC=0.464905688, minimum=0.200000000"
+F017:time_order,PASS,
+F017:one_zone,PASS,
+F017:physical_replay,PASS,
+F017:charging_replay,PASS,
+F018:same_type,PASS,
+F018:return_soc,PASS,"SOC=0.423128846, minimum=0.200000000"
+F018:time_order,PASS,
+F018:one_zone,PASS,
+F018:physical_replay,PASS,
+F018:charging_replay,PASS,
+F010:same_type,PASS,
+F010:return_soc,PASS,"SOC=0.573632253, minimum=0.200000000"
+F010:time_order,PASS,
+F010:one_zone,PASS,
+F010:physical_replay,PASS,
+F010:charging_replay,PASS,
+F005:same_type,PASS,
+F005:return_soc,PASS,"SOC=0.209477351, minimum=0.200000000"
+F005:time_order,PASS,
+F005:one_zone,PASS,
+F005:physical_replay,PASS,
+F005:charging_replay,PASS,
+F012:same_type,PASS,
+F012:return_soc,PASS,"SOC=0.475941224, minimum=0.200000000"
+F012:time_order,PASS,
+F012:one_zone,PASS,
+F012:physical_replay,PASS,
+F012:charging_replay,PASS,
+F014:same_type,PASS,
+F014:return_soc,PASS,"SOC=0.731509944, minimum=0.200000000"
+F014:time_order,PASS,
+F014:one_zone,PASS,
+F014:physical_replay,PASS,
+F014:charging_replay,PASS,
+F007:same_type,PASS,
+F007:return_soc,PASS,"SOC=0.230880321, minimum=0.200000000"
+F007:time_order,PASS,
+F007:one_zone,PASS,
+F007:physical_replay,PASS,
+F007:charging_replay,PASS,
+F004:same_type,PASS,
+F004:return_soc,PASS,"SOC=0.409684618, minimum=0.200000000"
+F004:time_order,PASS,
+F004:one_zone,PASS,
+F004:physical_replay,PASS,
+F004:charging_replay,PASS,
+F011:same_type,PASS,
+F011:return_soc,PASS,"SOC=0.270491342, minimum=0.200000000"
+F011:time_order,PASS,
+F011:one_zone,PASS,
+F011:physical_replay,PASS,
+F011:charging_replay,PASS,
+F006:same_type,PASS,
+F006:return_soc,PASS,"SOC=0.393958861, minimum=0.200000000"
+F006:time_order,PASS,
+F006:one_zone,PASS,
+F006:physical_replay,PASS,
+F006:charging_replay,PASS,
+F008:same_type,PASS,
+F008:return_soc,PASS,"SOC=0.472222528, minimum=0.200000000"
+F008:time_order,PASS,
+F008:one_zone,PASS,
+F008:physical_replay,PASS,
+F008:charging_replay,PASS,
+S001-FOD-01:delivery_replay,PASS,
+S001-FOD-02:delivery_replay,PASS,
+S001-FOD-03:delivery_replay,PASS,
+S001-HYG-01:delivery_replay,PASS,
+S001-HYG-02:delivery_replay,PASS,
+S001-MED-01:delivery_replay,PASS,
+S001-MED-01:hard_deadline,PASS,"delivered=1092.270s, deadline=3600.000s, slack=2507.730s"
+S001-MED-02:delivery_replay,PASS,
+S001-MED-02:hard_deadline,PASS,"delivered=1128.270s, deadline=3600.000s, slack=2471.730s"
+S001-WAT-01:delivery_replay,PASS,
+S001-WAT-01:hard_deadline,PASS,"delivered=1002.270s, deadline=3600.000s, slack=2597.730s"
+S001-WAT-02:delivery_replay,PASS,
+S001-WAT-03:delivery_replay,PASS,
+S001-WAT-04:delivery_replay,PASS,
+S001-WAT-05:delivery_replay,PASS,
+S001-WAT-06:delivery_replay,PASS,
+S001-WAT-07:delivery_replay,PASS,
+S001-WAT-08:delivery_replay,PASS,
+S002-FOD-01:delivery_replay,PASS,
+S002-FOD-02:delivery_replay,PASS,
+S002-HYG-01:delivery_replay,PASS,
+S002-MED-01:delivery_replay,PASS,
+S002-MED-01:hard_deadline,PASS,"delivered=2801.486s, deadline=3600.000s, slack=798.514s"
+S002-WAT-01:delivery_replay,PASS,
+S002-WAT-01:hard_deadline,PASS,"delivered=2837.486s, deadline=3600.000s, slack=762.514s"
+S002-WAT-02:delivery_replay,PASS,
+S002-WAT-03:delivery_replay,PASS,
+S002-WAT-04:delivery_replay,PASS,
+S003-FOD-01:delivery_replay,PASS,
+S003-FOD-02:delivery_replay,PASS,
+S003-HYG-01:delivery_replay,PASS,
+S003-MED-01:delivery_replay,PASS,
+S003-MED-01:hard_deadline,PASS,"delivered=5067.498s, deadline=7200.000s, slack=2132.502s"
+S003-WAT-01:delivery_replay,PASS,
+S003-WAT-01:hard_deadline,PASS,"delivered=5103.498s, deadline=7200.000s, slack=2096.502s"
+S003-WAT-02:delivery_replay,PASS,
+S003-WAT-03:delivery_replay,PASS,
+S003-WAT-04:delivery_replay,PASS,
+S004-FOD-01:delivery_replay,PASS,
+S004-HYG-01:delivery_replay,PASS,
+S004-MED-01:delivery_replay,PASS,
+S004-MED-01:hard_deadline,PASS,"delivered=6564.806s, deadline=7200.000s, slack=635.194s"
+S004-WAT-01:delivery_replay,PASS,
+S004-WAT-01:hard_deadline,PASS,"delivered=6600.806s, deadline=7200.000s, slack=599.194s"
+S004-WAT-02:delivery_replay,PASS,
+S004-WAT-03:delivery_replay,PASS,
+S005-FOD-01:delivery_replay,PASS,
+S005-HYG-01:delivery_replay,PASS,
+S005-MED-01:delivery_replay,PASS,
+S005-MED-01:hard_deadline,PASS,"delivered=8655.599s, deadline=10800.000s, slack=2144.401s"
+S005-WAT-01:delivery_replay,PASS,
+S005-WAT-01:hard_deadline,PASS,"delivered=8691.599s, deadline=10800.000s, slack=2108.401s"
+S005-WAT-02:delivery_replay,PASS,
+S005-WAT-03:delivery_replay,PASS,
+S006-FOD-01:delivery_replay,PASS,
+S006-HYG-01:delivery_replay,PASS,
+S006-MED-01:delivery_replay,PASS,
+S006-MED-01:hard_deadline,PASS,"delivered=2721.595s, deadline=3600.000s, slack=878.405s"
+S006-WAT-01:delivery_replay,PASS,
+S006-WAT-01:hard_deadline,PASS,"delivered=2757.595s, deadline=3600.000s, slack=842.405s"
+S006-WAT-02:delivery_replay,PASS,
+S006-WAT-03:delivery_replay,PASS,
+S007-FOD-01:delivery_replay,PASS,
+S007-HYG-01:delivery_replay,PASS,
+S007-MED-01:delivery_replay,PASS,
+S007-MED-01:hard_deadline,FAIL,"delivered=4457.478s, deadline=3600.000s, slack=-857.478s"
+S007-WAT-01:delivery_replay,PASS,
+S007-WAT-01:hard_deadline,FAIL,"delivered=4493.478s, deadline=3600.000s, slack=-893.478s"
+S007-WAT-02:delivery_replay,PASS,
+S008-FOD-01:delivery_replay,PASS,
+S008-HYG-01:delivery_replay,PASS,
+S008-MED-01:delivery_replay,PASS,
+S008-MED-01:hard_deadline,FAIL,"delivered=7490.068s, deadline=7200.000s, slack=-290.068s"
+S008-WAT-01:delivery_replay,PASS,
+S008-WAT-01:hard_deadline,FAIL,"delivered=7526.068s, deadline=7200.000s, slack=-326.068s"
+S008-WAT-02:delivery_replay,PASS,
+S009-FOD-01:delivery_replay,PASS,
+S009-MED-01:delivery_replay,PASS,
+S009-MED-01:hard_deadline,PASS,"delivered=4823.298s, deadline=10800.000s, slack=5976.702s"
+S009-WAT-01:delivery_replay,PASS,
+S009-WAT-01:hard_deadline,PASS,"delivered=4853.298s, deadline=10800.000s, slack=5946.702s"
+S010-FOD-01:delivery_replay,PASS,
+S010-MED-01:delivery_replay,PASS,
+S010-MED-01:hard_deadline,PASS,"delivered=1025.225s, deadline=3600.000s, slack=2574.775s"
+S010-WAT-01:delivery_replay,PASS,
+S010-WAT-01:hard_deadline,PASS,"delivered=1055.225s, deadline=3600.000s, slack=2544.775s"
+S011-FOD-01:delivery_replay,PASS,
+S011-MED-01:delivery_replay,PASS,
+S011-MED-01:hard_deadline,PASS,"delivered=5740.534s, deadline=10800.000s, slack=5059.466s"
+S011-WAT-01:delivery_replay,PASS,
+S011-WAT-01:hard_deadline,PASS,"delivered=5770.534s, deadline=10800.000s, slack=5029.466s"
+S012-FOD-01:delivery_replay,PASS,
+S012-MED-01:delivery_replay,PASS,
+S012-MED-01:hard_deadline,PASS,"delivered=1241.297s, deadline=3600.000s, slack=2358.703s"
+S012-WAT-01:delivery_replay,PASS,
+S012-WAT-01:hard_deadline,PASS,"delivered=1211.297s, deadline=3600.000s, slack=2388.703s"
+S013-FOD-01:delivery_replay,PASS,
+S013-MED-01:delivery_replay,PASS,
+S013-MED-01:hard_deadline,PASS,"delivered=2558.145s, deadline=3600.000s, slack=1041.855s"
+S013-WAT-01:delivery_replay,PASS,
+S013-WAT-01:hard_deadline,PASS,"delivered=2588.145s, deadline=3600.000s, slack=1011.855s"
+S014-FOD-01:delivery_replay,PASS,
+S014-MED-01:delivery_replay,PASS,
+S014-MED-01:hard_deadline,PASS,"delivered=3135.167s, deadline=3600.000s, slack=464.833s"
+S014-WAT-01:delivery_replay,PASS,
+S014-WAT-01:hard_deadline,PASS,"delivered=3105.167s, deadline=3600.000s, slack=494.833s"
+S015-FOD-01:delivery_replay,PASS,
+S015-MED-01:delivery_replay,PASS,
+S015-MED-01:hard_deadline,PASS,"delivered=4223.431s, deadline=7200.000s, slack=2976.569s"
+S015-WAT-01:delivery_replay,PASS,
+S015-WAT-01:hard_deadline,PASS,"delivered=4253.431s, deadline=10800.000s, slack=6546.569s"
+U01:no_overlap,PASS,
+U02:no_overlap,PASS,
+U03:no_overlap,PASS,
+U04:no_overlap,PASS,
+U05:no_overlap,PASS,
+U06:no_overlap,PASS,
+U07:no_overlap,PASS,
+U08:no_overlap,PASS,
+A-B01:charged_before_reuse,PASS,
+A-B02:charged_before_reuse,PASS,
+A-B03:charged_before_reuse,PASS,
+A-B04:charged_before_reuse,PASS,
+A-B05:charged_before_reuse,PASS,
+A-B06:charged_before_reuse,PASS,
+B-B01:charged_before_reuse,PASS,
+B-B02:charged_before_reuse,PASS,
+B-B03:charged_before_reuse,PASS,
+B-B04:charged_before_reuse,PASS,
+C-B01:charged_before_reuse,PASS,
+C-B02:charged_before_reuse,PASS,
+C-B03:charged_before_reuse,PASS,
+C-B04:charged_before_reuse,PASS,

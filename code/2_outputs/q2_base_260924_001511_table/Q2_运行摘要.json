@@ -1,0 +1,30 @@
+{
+  "status": "FAIL",
+  "method": "Q1 same-zone FFD batches, hard-deadline-first list scheduling",
+  "baseline_not_optimized": true,
+  "source_data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260923_213829",
+  "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+  "q1_batch_count": 18,
+  "sorties": 18,
+  "delivered_boxes": 80,
+  "uavs": 8,
+  "batteries": 14,
+  "makespan_s": 9339.561590443895,
+  "total_energy_kwh": 59.54240733204912,
+  "hard_deadline_boxes": 31,
+  "hard_deadline_violations": 4,
+  "first_failure": {
+    "check_id": "S007-MED-01:hard_deadline",
+    "status": "FAIL",
+    "detail": "delivered=4457.478s, deadline=3600.000s, slack=-857.478s"
+  },
+  "first_hard_conflict": {
+    "box_id": "S007-MED-01",
+    "delivered_s": 4457.477641737247,
+    "deadline_s": 3600.0
+  },
+  "soft_weighted_lateness_s": 14774.410171472115,
+  "battery_rule": "same-type shared pool; starts full; each used battery recharges to 100% before reuse",
+  "charging_model": "two-stage 0-90% takes 65% of T_full; 90-100% takes 35%; parallel charging allowed",
+  "note": "A failed hard deadline means this fixed Q1 FFD scheduling baseline failed; it does not prove Q2 infeasible."
+}
