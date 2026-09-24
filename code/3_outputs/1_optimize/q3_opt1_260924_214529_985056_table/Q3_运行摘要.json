@@ -1,0 +1,154 @@
+{
+  "status": "SEARCH_INCOMPLETE",
+  "interpretation": "当前搜索预算内未找到完整的 80 箱联合方案；未设固定运输架次数上限，也不证明题目无解",
+  "source": {
+    "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+    "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+    "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+  },
+  "candidate_stats": {
+    "backhaul": 529,
+    "grid_points": 320,
+    "candidate_count": 1711
+  },
+  "attempts": [
+    {
+      "grouping": "balanced",
+      "task_order": "hard_slack",
+      "initial_transport_batches": 31,
+      "candidate_limit": 16,
+      "start_probes": 8,
+      "beam_width": 6,
+      "status": "INCOMPLETE",
+      "failed_batch_id": "T032",
+      "failed_box_ids": [
+        "S013-MED-01"
+      ],
+      "failed_zone_ids": [
+        "S013"
+      ],
+      "failure_counts": {
+        "deadline_or_horizon": 288,
+        "relay_resource_calendar": 887040,
+        "relay_needs_earlier_launch": 312
+      },
+      "adaptive_splits": 1,
+      "scheduled_sorties": 5,
+      "scheduled_boxes": 10,
+      "elapsed_s": 291.56
+    },
+    {
+      "grouping": "neighbor_pair",
+      "task_order": "hard_slack",
+      "initial_transport_batches": 25,
+      "candidate_limit": 16,
+      "start_probes": 8,
+      "beam_width": 6,
+      "status": "INCOMPLETE",
+      "failed_batch_id": "T026",
+      "failed_box_ids": [
+        "S013-MED-01"
+      ],
+      "failed_zone_ids": [
+        "S013"
+      ],
+      "failure_counts": {
+        "deadline_or_horizon": 288,
+        "relay_resource_calendar": 887040,
+        "relay_needs_earlier_launch": 312
+      },
+      "adaptive_splits": 1,
+      "scheduled_sorties": 5,
+      "scheduled_boxes": 10,
+      "elapsed_s": 5.74
+    },
+    {
+      "grouping": "small_batches",
+      "task_order": "hard_slack",
+      "initial_transport_batches": 39,
+      "candidate_limit": 16,
+      "start_probes": 8,
+      "beam_width": 6,
+      "status": "INCOMPLETE",
+      "failed_batch_id": "T040",
+      "failed_box_ids": [
+        "S013-MED-01"
+      ],
+      "failed_zone_ids": [
+        "S013"
+      ],
+      "failure_counts": {
+        "deadline_or_horizon": 288,
+        "relay_resource_calendar": 887040,
+        "relay_needs_earlier_launch": 312
+      },
+      "adaptive_splits": 1,
+      "scheduled_sorties": 5,
+      "scheduled_boxes": 10,
+      "elapsed_s": 5.8
+    },
+    {
+      "grouping": "hard_split",
+      "task_order": "hard_slack",
+      "initial_transport_batches": 47,
+      "candidate_limit": 16,
+      "start_probes": 8,
+      "beam_width": 6,
+      "status": "INCOMPLETE",
+      "failed_batch_id": "T021",
+      "failed_box_ids": [
+        "S007-MED-01"
+      ],
+      "failed_zone_ids": [
+        "S007"
+      ],
+      "failure_counts": {
+        "deadline_or_horizon": 288,
+        "relay_resource_calendar": 864864,
+        "relay_needs_earlier_launch": 144
+      },
+      "adaptive_splits": 0,
+      "scheduled_sorties": 6,
+      "scheduled_boxes": 6,
+      "elapsed_s": 5.36
+    },
+    {
+      "grouping": "single_box_fallback",
+      "task_order": "hard_slack",
+      "initial_transport_batches": 80,
+      "candidate_limit": 16,
+      "start_probes": 8,
+      "beam_width": 6,
+      "status": "INCOMPLETE",
+      "failed_batch_id": "T052",
+      "failed_box_ids": [
+        "S007-MED-01"
+      ],
+      "failed_zone_ids": [
+        "S007"
+      ],
+      "failure_counts": {
+        "deadline_or_horizon": 288,
+        "relay_resource_calendar": 864864,
+        "relay_needs_earlier_launch": 144
+      },
+      "adaptive_splits": 0,
+      "scheduled_sorties": 6,
+      "scheduled_boxes": 6,
+      "elapsed_s": 5.34
+    }
+  ],
+  "global_optimality_proven": false,
+  "best_partial_delivered_boxes": 10,
+  "best_partial_transport_sorties": 5,
+  "best_partial_grouping": {
+    "grouping": "balanced",
+    "task_order": "hard_slack",
+    "initial_transport_batches": 31,
+    "candidate_limit": 16,
+    "start_probes": 8,
+    "beam_width": 6
+  },
+  "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\1_optimize\\q3_opt1_260924_214529_985056_table",
+  "figure_dir": null
+}
