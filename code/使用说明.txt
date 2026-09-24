@@ -1,27 +1,20 @@
-D 题代码使用说明
+D 题第一问代码使用说明
 
-用 VS Code 打开仓库根目录，Python 解释器选择 code\.venv\Scripts\python.exe。
-首次在新电脑运行时，在仓库根目录终端依次执行：
-py -3.12 -m venv .\code\.venv
-.\code\.venv\Scripts\python.exe -m pip install -r .\code\requirements.txt
+在 D题 目录打开项目，使用 code\.venv\Scripts\python.exe 作为 Python 解释器。
+原始附件和结果提交模板位于 0_3_数据。
 
-原始附件放在 0_3_数据。按下面顺序打开并运行 Python 文件：
-1. code\0_0_run_all.py：清洗和校验数据，结果在 code\0_outputs\run_时间戳。
-2. code\q1_0_baseline.py：生成问题一基线表格。
-3. code\q1_2_plot_results.py：生成基线图的 PNG 和 PDF。
-4. code\q1_3_optimize.py：生成问题一优化表格，求解可能需要几分钟。
-5. code\q1_5_plot_optimization.py：生成优化图的 PNG 和 PDF。
-6. code\q2_0_baseline.py：问题二同区排程基线，一次运行先生成表格，再生成图。
-7. code\q2_1_optimize.py：问题二重新组批、搜索多区路线并联合安排无人机与电池，一次运行先生成表格，再生成图。
-8. code\q2_2_optimize.py：问题二优化方案 2，从已验收方案出发合并小架次、拆除重插；一次运行先生成表格，再生成图。默认搜索 3 分钟，可用 --time-limit-s 300 调整。
+按顺序运行（每个脚本只需运行一次）：
+1. code\_0_pipeline.py：整理并验收原始数据，结果仍在 code\0_outputs\run_时间戳。
+2. code\q1_0_baseline.py：一次生成基线表格和两张图，分别在 code\1_outputs\q1_base_时间戳_table 与同时间戳_figure。
+3. code\q1_3_optimize.py：一次生成优化表格和一张图，分别在 code\1_outputs\q1_opt_时间戳_table 与同时间戳_figure。
 
-问题一的表格和图片都在 code\1_outputs：表格目录以 table 结尾，图片目录以 figure 结尾。
-问题二的基线与优化结果都在 code\2_outputs，分别以 q2_base、q2_opt、q2_opt2 开头；表格目录以 table 结尾，图片目录以 figure 结尾。
-优化目录中有 Q2_运行摘要.json、Q2_验收检查.csv 与官方格式的两张 Q2 表。只有全部检查通过才会生成 Q2_READY.txt；启发式结果不等于全局最优。
-优化方案 2 的主表采用“均衡推荐”，另存“按时优先”和“节能优先”备选表；Q2_方案对照.csv 可查看三种方案，Q2_最少架次下界.json 只给出宽松的架次下界。
-想增加搜索时间，可在仓库根目录终端运行：.\code\.venv\Scripts\python.exe .\code\q2_1_optimize.py --iterations 5000 --time-limit-s 300
-0_data_pipeline_test.py、q1_1_baseline_test.py、q1_4_optimize_test.py 是检查文件，不参与正常出结果。
-需要运行检查时，在仓库根目录终端执行：
-.\code\.venv\Scripts\python.exe -m pytest .\code -q
+在 D题 目录的 PowerShell 可依次执行：
+.\code\.venv\Scripts\python.exe .\code\_0_pipeline.py
+.\code\.venv\Scripts\python.exe .\code\q1_0_baseline.py
+.\code\.venv\Scripts\python.exe .\code\q1_3_optimize.py
 
-数据处理完成以 meta\READY.txt 为准；基线和优化结果分别以 Q1_READY.txt、Q1_OPT_READY.txt 为准。
+tests\0_data_pipeline_test.py、tests\q1_1_baseline_test.py 和 tests\q1_4_optimize_test.py 是检查文件。
+数据验收看 meta\READY.txt；基线和优化结果分别看 Q1_READY.txt、Q1_OPT_READY.txt。
+原有 code\outputs 和 D题\figures 是同步前的历史结果，已保留；新脚本不会读取它们。
+
+第四问基线入口是 code\q4_0_baseline.py，输入与输出约定见 code\q4_使用说明.md。
