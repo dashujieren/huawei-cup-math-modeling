@@ -1329,6 +1329,41 @@ def _relay_options_fast(state: JointState, profile: RouteProfile,
                 copied[first.slice_id] = shared.mission_id
                 expanded.append((missions, copied))
                 continue
+            # 后续运输任务可以沿用已经起飞的中继，并把原服务窗口延长。
+            # 延长后重新核算悬停能耗、返航时刻以及机体/组件日历。
+            for previous in missions:
+                if not (previous.ready_s <= first.start_s + EPS and
+                        previous.service_end_s < first.end_s - EPS):
+                    continue
+                if not _access_certified(previous.candidate, first,
+                                         links, access_cache):
+                    continue
+                new_end = first.end_s
+                if new_end - previous.ready_s > previous.candidate.max_service_s + EPS:
+                    reasons["relay_service_limit"] += 1
+                    continue
+                new_energy = (previous.candidate.travel_energy_kwh + power *
+                              (params["link_setup_s"] +
+                               new_end - previous.ready_s) / 3600.0)
+                if new_energy > ((1.0 - params["return_soc_min"]) *
+                                 params["energy_use_kwh"] + EPS):
+                    reasons["relay_energy_limit"] += 1
+                    continue
+                new_return = new_end + previous.candidate.homeward_s
+                others = [item for item in missions
+                          if item.mission_id != previous.mission_id]
+                if _relay_slot_shift(others, previous.uav_id,
+                                     previous.unit_id, previous.start_s,
+                                     new_return, new_energy, relay) > EPS:
+                    reasons["relay_resource_calendar"] += 1
+                    continue
+                extended = replace(previous, service_end_s=new_end,
+                                   return_s=new_return, energy_kwh=new_energy)
+                copied = dict(assigned)
+                copied[first.slice_id] = previous.mission_id
+                expanded.append(([
+                    extended if item.mission_id == previous.mission_id else item
+                    for item in missions], copied))
             ranked = profile.ranked_sites.get(local_id, ())
             if not ranked:
                 reasons["no_spatial_relay_site"] += 1
@@ -1407,8 +1442,11 @@ def _insert_task(ctx: Context, state: JointState, task: RouteTask,
                  step_s: float, site_tree: cKDTree | None,
                  profiles: dict[tuple[str, Any, str], RouteProfile],
                  access_cache: dict[tuple[Any, ...], bool], limit: int,
-                 candidate_limit: int, start_probes: int, soft_horizon_s: float
+                 candidate_limit: int, start_probes: int, soft_horizon_s: float,
+                 earliest_start_s: float = 0.0
                  ) -> tuple[list[JointState], dict[str, int]]:
+    if not math.isfinite(earliest_start_s) or earliest_start_s < 0:
+        raise ValueError("运输候选最早出发时刻必须非负且有限")
     options = ctx.options(task.route)
     reasons: dict[str, int] = defaultdict(int)
     if not options:
@@ -1450,7 +1488,7 @@ def _insert_task(ctx: Context, state: JointState, task: RouteTask,
                 continue
             used[uav_id] += 1
             considered += 1
-            start = earliest
+            start = max(earliest, earliest_start_s)
             horizon = latest if math.isfinite(latest) else soft_horizon_s
             successes = 0
             for _ in range(start_probes):
