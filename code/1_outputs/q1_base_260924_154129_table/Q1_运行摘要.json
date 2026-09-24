@@ -1,5 +1,5 @@
 {
-  "source_data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260923_213829",
+  "source_data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
   "source_validated_artifacts_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
   "method": "single-box fallback and same-zone first-fit-decreasing; not optimized",
   "energy_formula_status": "modeling assumption from execution guide page 6, not an explicit official formula",

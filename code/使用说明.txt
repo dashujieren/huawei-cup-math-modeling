@@ -6,24 +6,22 @@ py -3.12 -m venv .\code\.venv
 .\code\.venv\Scripts\python.exe -m pip install -r .\code\requirements.txt
 
 原始附件放在 0_3_数据。按下面顺序打开并运行 Python 文件：
-1. code\0_0_run_all.py：清洗和校验数据，结果在 code\0_outputs\run_时间戳。
-2. code\q1_0_baseline.py：生成问题一基线表格。
-3. code\q1_2_plot_results.py：生成基线图的 PNG 和 PDF。
-4. code\q1_3_optimize.py：生成问题一优化表格，求解可能需要几分钟。
-5. code\q1_5_plot_optimization.py：生成优化图的 PNG 和 PDF。
-6. code\q2_0_baseline.py：问题二同区排程基线，一次运行先生成表格，再生成图。
-7. code\q2_1_optimize.py：问题二重新组批、搜索多区路线并联合安排无人机与电池，一次运行先生成表格，再生成图。
-8. code\q2_2_optimize.py：问题二优化方案 2，紧急箱由 A 型机直送，普通箱合并多点路线并安排无人机、电池；先生成表格，再生成图。
-9. code\q2_3_optimize.py：问题二优化方案 3，从已有可行方案出发合并小架次、拆除重插；先生成表格，再生成图。默认搜索 3 分钟，可用 --time-limit-s 300 调整。
-10. code\q2_4_optimize.py：问题二优化方案 4，从已有可行方案出发逐箱换位、换箱并调整任务顺序；先生成表格，再生成图。默认搜索 3 分钟。
+1. code\_0_pipeline.py：清洗和校验数据，结果在 code\0_outputs\run_时间戳。
+2. code\q1_0_baseline.py：生成问题一基线表格和图片。
+3. code\q1_1_optimize.py：生成问题一优化表格和图片，求解可能需要几分钟。
+4. code\q2_0_baseline.py：问题二同区排程基线，一次运行先生成表格，再生成图。
+5. code\q2_1_optimize.py：问题二重新组批、搜索多区路线并联合安排无人机与电池，一次运行先生成表格，再生成图。
+6. code\q2_2_optimize.py：问题二优化方案 2，紧急箱由 A 型机直送，普通箱合并多点路线并安排无人机、电池；先生成表格，再生成图。
+7. code\q2_3_optimize.py：问题二优化方案 3，从已有可行方案出发合并小架次、拆除重插；先生成表格，再生成图。默认搜索 3 分钟，可用 --time-limit-s 300 调整。
+8. code\q2_4_optimize.py：问题二优化方案 4，从已有可行方案出发逐箱换位、换箱并调整任务顺序；先生成表格，再生成图。默认搜索 3 分钟。
+9. code\q2_5_optimize.py：问题二优化方案 5，重新搜索组批和跨区路线；需先有问题二其他可行方案，一次运行先生成表格，再生成图。
 
 问题一的表格和图片都在 code\1_outputs：表格目录以 table 结尾，图片目录以 figure 结尾。
-问题二的结果都在 code\2_outputs。先按方法进入 0_baseline、1_optimize、2_optimize、3_optimize、4_optimize；每个方法里按运行时间分别保存 table 表格目录和 figure 图片目录，不覆盖旧结果。
+问题二的结果都在 code\2_outputs。先按方法进入 0_baseline 至 5_optimize；每个方法里按运行时间分别保存 table 表格目录和 figure 图片目录，不覆盖旧结果。
 优化目录中有 Q2_运行摘要.json、Q2_验收检查.csv 与官方格式的两张 Q2 表。只有全部检查通过才会生成 Q2_READY.txt；启发式结果不等于全局最优。
 优化方案 3 的主表采用“均衡推荐”，另存“按时优先”和“节能优先”备选表；Q2_方案对照.csv 可查看三种方案，Q2_最少架次下界.json 只给出宽松的架次下界。
 优化方案 4 保持硬截止与软时效零迟到；先看 Q2_运行摘要.json 和 Q2_方案对照.csv，再看 Q2_验收检查.csv。只有 PASS 才能使用该方案，PASS 不表示全局最优。
 想增加搜索时间，可在仓库根目录终端运行：.\code\.venv\Scripts\python.exe .\code\q2_1_optimize.py --iterations 5000 --time-limit-s 300
-0_data_pipeline_test.py、q1_1_baseline_test.py、q1_4_optimize_test.py 是检查文件，不参与正常出结果。
 需要运行检查时，在仓库根目录终端执行：
 .\code\.venv\Scripts\python.exe -m pytest .\code -q
 

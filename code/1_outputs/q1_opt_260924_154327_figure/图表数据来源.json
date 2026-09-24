@@ -1,5 +1,5 @@
 {
-  "source_result_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\1_outputs\\q1_opt_260923_231828_table",
+  "source_result_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\1_outputs\\q1_opt_260924_154327_table",
   "source_metrics_sha256": "d942d39b803998f7608788459489e218411f4778890547244e574ae8bd445bbf",
   "source_qa_passed": 635,
   "transformation": "cumulative_operation_s / 3600 -> hours; no filtering except excluding the 80-sortie fallback from the local-scale chart",
