@@ -7,12 +7,14 @@ import hashlib
 import json
 import math
 import re
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import scipy.io
 import tifffile
+import pytest
 from pyproj import Transformer
 
 
@@ -887,3 +889,112 @@ def main_stage(stage: str) -> None:
     except Exception as exc:
         record_failure(run_dir, stage, exc)
         raise
+
+
+def main() -> None:
+    """一次完成抽取、标准化、地理派生和数据验收。"""
+    parser = argparse.ArgumentParser(description="D题数据处理与验收")
+    parser.add_argument("--self-test", action="store_true", help="只运行内置测试，不生成正式结果")
+    parser.add_argument("--run-dir", type=Path, help="指定新的输出目录；默认使用0_outputs/run_时间戳")
+    args = parser.parse_args()
+    if args.self_test:
+        raise SystemExit(pytest.main([str(Path(__file__).resolve()), "-q", "-p", "no:cacheprovider", "-o", "python_files=*.py"]))
+    project = Path(__file__).resolve().parent.parent
+    run_dir = args.run_dir.resolve() if args.run_dir else (
+        Path(__file__).resolve().parent / "0_outputs" /
+        datetime.now().strftime("run_%Y%m%d_%H%M%S")
+    )
+    if run_dir.exists():
+        raise FileExistsError(f"不覆盖既有数据结果：{run_dir}")
+    print(f"运行目录：{run_dir}")
+    try:
+        extract(project, run_dir)
+        normalize(run_dir)
+        geo(project, run_dir)
+        ok = validate(project, run_dir)
+        if ok and not verify_ready(run_dir):
+            raise RuntimeError("验收文件哈希不一致，禁止发布")
+    except Exception as exc:
+        record_failure(run_dir, "run_all", exc)
+        raise
+    print(f"数据验收：{'通过' if ok else '失败'}")
+    print(f"检查报告：{run_dir / 'meta' / 'qa_report.csv'}")
+    if not ok:
+        raise SystemExit(1)
+
+
+
+
+# 内置自检：仅通过 --self-test 运行，不影响正常求解。
+
+SELF_TEST_PROJECT = Path(__file__).resolve().parent.parent
+
+def test_supercover_is_reversible_and_covers_corner_neighbours() -> None:
+    forward = _line_cells(0.5, 0.5, 2.5, 2.5, 4, 4)
+    backward = _line_cells(2.5, 2.5, 0.5, 0.5, 4, 4)
+    assert forward == backward
+    assert {(0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2)} <= forward
+
+
+def test_fractional_stock_is_rejected() -> None:
+    with pytest.raises(ValueError, match="整数"):
+        require_integer(pd.Series([6.5]), "stock_qty", 1)
+
+
+def test_full_pipeline_and_failed_qa_revokes_ready(tmp_path: Path) -> None:
+    run_dir = tmp_path / "test_run"
+    extract(SELF_TEST_PROJECT, run_dir)
+    normalize(run_dir)
+    geo(SELF_TEST_PROJECT, run_dir)
+
+    boxes_path = run_dir / "clean" / "boxes.csv"
+    boxes = pd.read_csv(boxes_path)
+    assert len(boxes) == 80
+    assert boxes.loc[~boxes["is_first_batch"], "first_deadline_s"].isna().all()
+    medical_nonfirst = boxes.loc[boxes["medical_bool"] & ~boxes["is_first_batch"]]
+    assert len(medical_nonfirst) == 1
+    assert np.isclose(medical_nonfirst.iloc[0]["hard_deadline_s"],
+                      medical_nonfirst.iloc[0]["expected_s"])
+    both = boxes.loc[boxes["medical_bool"] & boxes["is_first_batch"]]
+    assert np.allclose(both["hard_deadline_s"],
+                       both[["first_deadline_s", "expected_s"]].min(axis=1))
+
+    assert validate(SELF_TEST_PROJECT, run_dir)
+    ready = run_dir / "meta" / "READY.txt"
+    assert ready.is_file()
+    assert verify_ready(run_dir)
+
+    arc_path = run_dir / "derived" / "arc_geometry.csv"
+    arcs = pd.read_csv(arc_path)
+    original_arcs = arcs.copy()
+    arcs["max_dsm_m"] -= 100
+    arcs["cruise_alt_m"] -= 100
+    arcs.to_csv(arc_path, index=False)
+    assert not verify_ready(run_dir)
+    assert not validate(SELF_TEST_PROJECT, run_dir)
+    assert not ready.exists()
+    arcs_qa = pd.read_csv(run_dir / "meta" / "qa_report.csv")
+    assert arcs_qa.loc[arcs_qa["check_id"].eq("arcs_recomputed_from_sources"), "status"].iloc[0] == "FAIL"
+
+    original_arcs.to_csv(arc_path, index=False)
+    assert validate(SELF_TEST_PROJECT, run_dir)
+    assert ready.is_file()
+    assert verify_ready(run_dir)
+
+    boxes.loc[0, "mass_kg"] += 1.0
+    boxes.to_csv(boxes_path, index=False)
+    assert not validate(SELF_TEST_PROJECT, run_dir)
+    assert not ready.exists()
+    qa = pd.read_csv(run_dir / "meta" / "qa_report.csv")
+    assert (qa["status"] == "FAIL").any()
+
+    boxes.drop(columns=["mass_kg"]).to_csv(boxes_path, index=False)
+    with pytest.raises(KeyError):
+        validate(SELF_TEST_PROJECT, run_dir)
+    assert not ready.exists()
+    exception_qa = pd.read_csv(run_dir / "meta" / "qa_report.csv")
+    assert exception_qa.iloc[0]["check_id"] == "exception:validate"
+
+
+if __name__ == "__main__":
+    main()
