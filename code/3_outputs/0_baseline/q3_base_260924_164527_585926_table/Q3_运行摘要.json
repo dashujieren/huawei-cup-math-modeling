@@ -1,0 +1,90 @@
+{
+  "status": "BASELINE_UNCOVERED",
+  "interpretation": "仅固定 Q2 方案、当前有限网格及贪心基线的结果；失败不证明第三问整体无可行解",
+  "created_at": "2026-09-24T16:45:29",
+  "source": {
+    "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+    "q2_dir": "D:\\Documents\\ChatGPT\\研究生数学建模比赛\\D题\\code\\2_outputs\\5_optimize\\q2_opt5_260924_151100_table",
+    "data_run": "D:\\Documents\\ChatGPT\\研究生数学建模比赛\\D题\\code\\0_outputs\\run_20260924_101546",
+    "q2_file_sha256": {
+      "Q2_架次与电池周转.csv": "d34d431dcfbb0020f00b78b662949551179ac7512498d634d4dfc58934da28de",
+      "Q2_路线航段.csv": "591c1361fd0b0fabe0d1d35db3ade9caaf3201c6f997078339eade4c39a649bd",
+      "Q2_运输架次.csv": "c6ca31753f177ffc0ed216334da15d457482419858638c31fa9e36dfa7f1aeba",
+      "Q2_逐箱交付.csv": "243f9eae93c57181864ebf04668a03b218c35a7eac951ecf517ecfc553e60bda"
+    },
+    "sorties": 19,
+    "boxes": 80,
+    "q2_checks": 207,
+    "transport_energy_kwh": 62.98898391549,
+    "transport_last_return_s": 8644.65118181,
+    "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+  },
+  "sample_step_s": 20.0,
+  "direct_blind_sample_count": 644,
+  "direct_blind_sample_duration_s": 12301.302773029936,
+  "direct_blind_interval_count": 16,
+  "relay_mission_count": 5,
+  "relay_energy_kwh": 3.992479488285031,
+  "midpoint_uncovered_slice_count": 160,
+  "midpoint_uncovered_duration_s": 3048.127217463437,
+  "candidate_stats": {
+    "backhaul": 423,
+    "pdf_cruise_screen": 1058,
+    "grid_points": 297,
+    "candidate_count": 598
+  },
+  "search_comparison": {
+    "selected": "coarse_500m",
+    "coarse_uncovered_slices": 160,
+    "fine_point_count": 63,
+    "refined_candidate_stats": {
+      "backhaul": 717,
+      "pdf_cruise_screen": 1128,
+      "grid_points": 358,
+      "candidate_count": 661
+    },
+    "refined_uncovered_slices": 160
+  },
+  "schedule_stats": {
+    "feasible_candidate_checks": 913,
+    "exact_shortlisted_checks": 299,
+    "covered_midpoint_slices": 484,
+    "baseline_uncovered_slices": 160,
+    "midpoint_blind_slices": 644,
+    "candidate_shortlist_size": 72,
+    "uav_next_ready_s": {
+      "R01": 7983.343547638775,
+      "R02": 8812.289954033771
+    },
+    "unit_next_ready_s": {
+      "R-E01": 6156.4012883740725,
+      "R-E02": 9993.32910088338,
+      "R-E03": 8371.638915851716,
+      "R-E04": 0.0,
+      "R-E05": 0.0,
+      "R-E06": 0.0
+    },
+    "cache_size": 70824
+  },
+  "verification": {
+    "source_copies_identical": {
+      "Q3_运输架次.csv": true,
+      "Q3_逐箱交付.csv": true
+    },
+    "diagnostic_uncovered_rows": 36,
+    "communication_status": "FAIL",
+    "certified_interval_count": 87,
+    "failed_interval_count": 41,
+    "unverified_interval_count": 64,
+    "worst_certified_margin_db": 0.04994523170643106,
+    "first_comm_issue": {
+      "status": "FAIL",
+      "kind": "comm_row",
+      "detail": "通信表第 5 行无效：未知保障方式 '未覆盖'"
+    },
+    "relay_resource_status": "PASS",
+    "first_resource_failure": null
+  },
+  "table_dir": "D:\\Documents\\ChatGPT\\研究生数学建模比赛\\D题\\code\\3_outputs\\0_baseline\\q3_base_260924_164527_585926_table",
+  "figure_dir": "D:\\Documents\\ChatGPT\\研究生数学建模比赛\\D题\\code\\3_outputs\\0_baseline\\q3_base_260924_164527_585926_figure"
+}
