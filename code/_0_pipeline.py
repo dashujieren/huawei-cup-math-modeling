@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import re
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -887,3 +888,36 @@ def main_stage(stage: str) -> None:
     except Exception as exc:
         record_failure(run_dir, stage, exc)
         raise
+
+
+def main() -> None:
+    """一次完成抽取、标准化、地理派生和数据验收。"""
+    parser = argparse.ArgumentParser(description="D题数据处理与验收")
+    parser.add_argument("--run-dir", type=Path, help="指定新的输出目录；默认使用0_outputs/run_时间戳")
+    args = parser.parse_args()
+    project = Path(__file__).resolve().parent.parent
+    run_dir = args.run_dir.resolve() if args.run_dir else (
+        Path(__file__).resolve().parent / "0_outputs" /
+        datetime.now().strftime("run_%Y%m%d_%H%M%S")
+    )
+    if run_dir.exists():
+        raise FileExistsError(f"不覆盖既有数据结果：{run_dir}")
+    print(f"运行目录：{run_dir}")
+    try:
+        extract(project, run_dir)
+        normalize(run_dir)
+        geo(project, run_dir)
+        ok = validate(project, run_dir)
+        if ok and not verify_ready(run_dir):
+            raise RuntimeError("验收文件哈希不一致，禁止发布")
+    except Exception as exc:
+        record_failure(run_dir, "run_all", exc)
+        raise
+    print(f"数据验收：{'通过' if ok else '失败'}")
+    print(f"检查报告：{run_dir / 'meta' / 'qa_report.csv'}")
+    if not ok:
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()
