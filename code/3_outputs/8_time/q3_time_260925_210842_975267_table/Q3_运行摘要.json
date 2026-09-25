@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "method": "Q3 scheme 3 tail-critical rebatching and joint makespan search",
+  "source_scheme3_table": "D:\\codex\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table",
+  "warm_table": null,
+  "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+  "source_data_run": "D:\\codex\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+  "code_sha256": {
+    "q3_8_time_optimize.py": "8ba993163e36aa3ecf795ba9bf452a43f0b5b4d3712fabbe51ed3833466db587",
+    "q3_3_optimize.py": "11a81e43d5ca63dcba22c80cc13f5a3430d570e1274a95ba4d651b7bfb07fe8a",
+    "q3_2_optimize.py": "298d30aa88b52e178adff8775b27014cbe884ed2ad8ac47f8497f35885c0991c",
+    "q3_1_optimize.py": "9fa017f8eef90e0bf0aafd62bc9a98db93e9e17f731af7fb0e3d11e5aeb41712"
+  },
+  "reference_metrics": {
+    "transport_sorties": 24,
+    "relay_sorties": 10,
+    "makespan_s": 12846.727665741508,
+    "energy_kwh": 75.10511214044642,
+    "weighted_lateness": 550194.0010686526
+  },
+  "final_metrics": {
+    "weighted_lateness": 116297.08542294419,
+    "makespan_s": 7558.27292298214,
+    "energy_kwh": 77.12469374619059,
+    "transport_sorties": 29,
+    "relay_sorties": 7
+  },
+  "improved_from_scheme3": true,
+  "target_s": 7200,
+  "target_gap_s": 358.2729229821398,
+  "target_reached": false,
+  "milestones_reached_s": [
+    10800,
+    9000,
+    8100
+  ],
+  "grade": "G2",
+  "search_stage": "全程",
+  "search_wall_s": 1205.4567258000025,
+  "global_optimality_proven": false,
+  "candidate_sites": 33,
+  "candidate_stats": {
+    "certified": 1765,
+    "uncovered_routes": 4,
+    "new_sites": 12,
+    "site_budget_reached": 0,
+    "site_grid_exceeded": 0,
+    "fast_sites": 1
+  },
+  "table_dir": "D:\\codex\\huawei-cup-math-modeling\\code\\3_outputs\\8_time\\q3_time_260925_210842_975267_table",
+  "figure_dir": "D:\\codex\\huawei-cup-math-modeling\\code\\3_outputs\\8_time\\q3_time_260925_210842_975267_figure"
+}
