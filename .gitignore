@@ -99,3 +99,6 @@ code/0_outputs/run_20260924_154122/meta/source_manifest.json
 code/_archive_q3/q3_5_equal_optimize_test.py
 code/_archive_q3/q3_6.py
 code/_archive_q3/q3_6_scheme2_equal_optimize.py
+code/q3_7_paper_figures.py
+code/q3_7_论文配图使用说明.md
+code/requirements.txt
