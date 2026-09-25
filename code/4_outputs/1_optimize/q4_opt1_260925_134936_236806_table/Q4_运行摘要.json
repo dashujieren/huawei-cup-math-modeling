@@ -1,0 +1,248 @@
+{
+  "status": "PASS",
+  "interpretation": "固定Q3方案1全部任务与绝对时刻；组内同型资源可重新编号；精确枚举分区",
+  "global_optimality": "仅对固定问题三任务时刻与现有原子单元的2组/3组分区完整枚举，不是问题三与问题四联合全局最优",
+  "source_q3_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\1_optimize\\q3_opt1_260925_103405_053686_table",
+  "source_q3_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+  "source_q3_file_sha256": {
+    "Q3_运输明细.csv": "7354b1014562f51463695ca03815998dfacb559c228d0d21d0d444f875c68544",
+    "Q3_逐箱交付.csv": "2a4c7d19d4b74f85b6ebe4bd45d335bfbf5f670759878d4b86f07063c0f21439",
+    "Q3_通信保障.csv": "1b4e9e8f71bac259e84bcdca3ee5207bf12b137a7c10cfd0bfac030d600e5b7e",
+    "Q3_中继架次.csv": "aacf4b27503799eb34e4873a797e24cb223503f5578a2586b6c48b113bcea627",
+    "Q3_中继资源时间线.csv": "acc697ab76779ca941942959990ece9a3af0e7ba5a669a4760ac2217d8166ef6"
+  },
+  "source_data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+  "stock": {
+    "UA": 4,
+    "UB": 2,
+    "UC": 2,
+    "BA": 6,
+    "BB": 4,
+    "BC": 4,
+    "RU": 2,
+    "RE": 6
+  },
+  "pooled_peak_need": {
+    "UA": 4,
+    "UB": 2,
+    "UC": 2,
+    "BA": 4,
+    "BB": 4,
+    "BC": 4,
+    "RU": 2,
+    "RE": 4
+  },
+  "components": [
+    {
+      "id": "C01",
+      "zones": [
+        "S002",
+        "S004",
+        "S005",
+        "S008",
+        "S009",
+        "S010",
+        "S012",
+        "S013",
+        "S014"
+      ],
+      "boxes": 40
+    },
+    {
+      "id": "C02",
+      "zones": [
+        "S003",
+        "S007",
+        "S015"
+      ],
+      "boxes": 16
+    },
+    {
+      "id": "C03",
+      "zones": [
+        "S001"
+      ],
+      "boxes": 15
+    },
+    {
+      "id": "C04",
+      "zones": [
+        "S006"
+      ],
+      "boxes": 6
+    },
+    {
+      "id": "C05",
+      "zones": [
+        "S011"
+      ],
+      "boxes": 3
+    }
+  ],
+  "partition_count": {
+    "2": 15,
+    "3": 25
+  },
+  "representatives": [
+    {
+      "groups": 2,
+      "role": "缺口优先",
+      "scheme_id": "G2-001",
+      "group_boxes": [
+        77,
+        3
+      ],
+      "minimum_resource_need": {
+        "UA": 4,
+        "UB": 2,
+        "UC": 2,
+        "BA": 6,
+        "BB": 4,
+        "BC": 4,
+        "RU": 2,
+        "RE": 4
+      },
+      "inventory_gap": {
+        "UA": 0,
+        "UB": 0,
+        "UC": 0,
+        "BA": 0,
+        "BB": 0,
+        "BC": 0,
+        "RU": 0,
+        "RE": 0
+      },
+      "fixed_original_id_gap": {
+        "UA": 2,
+        "UB": 0,
+        "UC": 0,
+        "BA": 1,
+        "BB": 0,
+        "BC": 0,
+        "RU": 0,
+        "RE": 0
+      }
+    },
+    {
+      "groups": 2,
+      "role": "箱数均衡优先",
+      "scheme_id": "G2-015",
+      "group_boxes": [
+        40,
+        40
+      ],
+      "minimum_resource_need": {
+        "UA": 4,
+        "UB": 4,
+        "UC": 4,
+        "BA": 5,
+        "BB": 6,
+        "BC": 4,
+        "RU": 4,
+        "RE": 6
+      },
+      "inventory_gap": {
+        "UA": 0,
+        "UB": 2,
+        "UC": 2,
+        "BA": 0,
+        "BB": 2,
+        "BC": 0,
+        "RU": 2,
+        "RE": 0
+      },
+      "fixed_original_id_gap": {
+        "UA": 1,
+        "UB": 2,
+        "UC": 2,
+        "BA": 1,
+        "BB": 3,
+        "BC": 4,
+        "RU": 2,
+        "RE": 3
+      }
+    },
+    {
+      "groups": 3,
+      "role": "缺口优先",
+      "scheme_id": "G3-002",
+      "group_boxes": [
+        62,
+        15,
+        3
+      ],
+      "minimum_resource_need": {
+        "UA": 4,
+        "UB": 3,
+        "UC": 3,
+        "BA": 6,
+        "BB": 4,
+        "BC": 5,
+        "RU": 2,
+        "RE": 4
+      },
+      "inventory_gap": {
+        "UA": 0,
+        "UB": 1,
+        "UC": 1,
+        "BA": 0,
+        "BB": 0,
+        "BC": 1,
+        "RU": 0,
+        "RE": 0
+      },
+      "fixed_original_id_gap": {
+        "UA": 2,
+        "UB": 1,
+        "UC": 1,
+        "BA": 1,
+        "BB": 1,
+        "BC": 2,
+        "RU": 0,
+        "RE": 0
+      }
+    },
+    {
+      "groups": 3,
+      "role": "箱数均衡优先",
+      "scheme_id": "G3-024",
+      "group_boxes": [
+        40,
+        19,
+        21
+      ],
+      "minimum_resource_need": {
+        "UA": 4,
+        "UB": 4,
+        "UC": 6,
+        "BA": 5,
+        "BB": 6,
+        "BC": 6,
+        "RU": 4,
+        "RE": 6
+      },
+      "inventory_gap": {
+        "UA": 0,
+        "UB": 2,
+        "UC": 4,
+        "BA": 0,
+        "BB": 2,
+        "BC": 2,
+        "RU": 2,
+        "RE": 0
+      },
+      "fixed_original_id_gap": {
+        "UA": 2,
+        "UB": 2,
+        "UC": 4,
+        "BA": 1,
+        "BB": 3,
+        "BC": 4,
+        "RU": 2,
+        "RE": 3
+      }
+    }
+  ],
+  "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\4_outputs\\1_optimize\\q4_opt1_260925_134936_236806_table",
+  "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\4_outputs\\1_optimize\\q4_opt1_260925_134936_236806_figure"
+}
