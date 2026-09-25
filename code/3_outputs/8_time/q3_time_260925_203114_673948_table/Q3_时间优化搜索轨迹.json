@@ -1,0 +1,202 @@
+[
+  {
+    "round": 0,
+    "search_stage": "原解映射",
+    "solver_stage": "full",
+    "solver_status": "OPTIMAL",
+    "route_options": 24,
+    "relay_sites": 20,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 0.1068955,
+    "branches": 517,
+    "conflicts": 8,
+    "time_limit_s": 15.0,
+    "selected_transport_sorties": 24,
+    "selected_relay_sorties": 10,
+    "validation": "PASS",
+    "metrics": {
+      "weighted_lateness": 550194.0010686526,
+      "makespan_s": 12846.727665741508,
+      "energy_kwh": 75.10511214044642,
+      "transport_sorties": 24,
+      "relay_sorties": 10
+    }
+  },
+  {
+    "round": 1,
+    "search_stage": "拖尾邻域",
+    "solver_stage": "full",
+    "grade": "G0",
+    "metric_limits": {
+      "energy_j": 270383404,
+      "weighted_lateness": 555195,
+      "makespan_s": 12849
+    },
+    "released": 6,
+    "solver_status": "UNKNOWN",
+    "route_options": 149,
+    "relay_sites": 20,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 35.2810982,
+    "branches": 48149,
+    "conflicts": 2116,
+    "time_limit_s": 35.0,
+    "validation": "NO_SOLUTION"
+  },
+  {
+    "round": 2,
+    "search_stage": "拖尾邻域",
+    "solver_stage": "full",
+    "grade": "G1",
+    "metric_limits": {
+      "energy_j": 283902324,
+      "weighted_lateness": 582704,
+      "makespan_s": 12849
+    },
+    "released": 6,
+    "solver_status": "FEASIBLE",
+    "route_options": 124,
+    "relay_sites": 20,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 35.4814444,
+    "branches": 32717,
+    "conflicts": 101,
+    "time_limit_s": 35.0,
+    "objective_value": 10497.0,
+    "best_bound": 10238.0,
+    "selected_transport_sorties": 26,
+    "selected_relay_sorties": 9,
+    "validation": "PASS",
+    "metrics": {
+      "weighted_lateness": 372707.63445421227,
+      "makespan_s": 10496.727665741508,
+      "energy_kwh": 77.56893438934034,
+      "transport_sorties": 26,
+      "relay_sorties": 9
+    }
+  },
+  {
+    "round": 3,
+    "search_stage": "全程",
+    "solver_stage": "full",
+    "grade": "G2",
+    "metric_limits": {
+      "energy_j": 297421245,
+      "weighted_lateness": 610214,
+      "makespan_s": 10499
+    },
+    "released": 26,
+    "solver_status": "FEASIBLE",
+    "route_options": 231,
+    "relay_sites": 24,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 101.0499226,
+    "branches": 7237,
+    "conflicts": 1,
+    "time_limit_s": 100.0,
+    "objective_value": 8101.0,
+    "best_bound": 4045.0,
+    "selected_transport_sorties": 29,
+    "selected_relay_sorties": 7,
+    "validation": "PASS",
+    "metrics": {
+      "weighted_lateness": 89640.09348399543,
+      "makespan_s": 8100.27292298214,
+      "energy_kwh": 76.92916698159028,
+      "transport_sorties": 29,
+      "relay_sorties": 7
+    }
+  },
+  {
+    "round": 4,
+    "search_stage": "拖尾邻域",
+    "solver_stage": "full",
+    "grade": "G0",
+    "metric_limits": {
+      "energy_j": 270383404,
+      "weighted_lateness": 555195,
+      "makespan_s": 8103
+    },
+    "released": 10,
+    "solver_status": "INFEASIBLE",
+    "route_options": 122,
+    "relay_sites": 24,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 0.3141835,
+    "branches": 0,
+    "conflicts": 0,
+    "time_limit_s": 35.0,
+    "validation": "NO_SOLUTION"
+  },
+  {
+    "round": 5,
+    "search_stage": "拖尾邻域",
+    "solver_stage": "full",
+    "grade": "G1",
+    "metric_limits": {
+      "energy_j": 283902324,
+      "weighted_lateness": 582704,
+      "makespan_s": 8103
+    },
+    "released": 10,
+    "solver_status": "FEASIBLE",
+    "route_options": 128,
+    "relay_sites": 24,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 35.1889855,
+    "branches": 11060,
+    "conflicts": 11,
+    "time_limit_s": 35.0,
+    "objective_value": 8101.0,
+    "best_bound": 7529.0,
+    "selected_transport_sorties": 29,
+    "selected_relay_sorties": 7,
+    "validation": "PASS",
+    "metrics": {
+      "weighted_lateness": 89640.09348399543,
+      "makespan_s": 8100.27292298214,
+      "energy_kwh": 76.92916698159028,
+      "transport_sorties": 29,
+      "relay_sorties": 7
+    }
+  },
+  {
+    "round": 6,
+    "search_stage": "全程",
+    "solver_stage": "full",
+    "grade": "G2",
+    "metric_limits": {
+      "energy_j": 297421245,
+      "weighted_lateness": 610214,
+      "makespan_s": 8103
+    },
+    "released": 29,
+    "solver_status": "FEASIBLE",
+    "route_options": 350,
+    "relay_sites": 24,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 70.52987440000001,
+    "branches": 3713,
+    "conflicts": 1,
+    "time_limit_s": 69.45297690000007,
+    "objective_value": 8051.0,
+    "best_bound": 2411.0,
+    "selected_transport_sorties": 31,
+    "selected_relay_sorties": 7,
+    "validation": "PASS",
+    "metrics": {
+      "weighted_lateness": 31989.11341297362,
+      "makespan_s": 8050.27292298214,
+      "energy_kwh": 82.60055981855959,
+      "transport_sorties": 31,
+      "relay_sorties": 7
+    }
+  }
+]
