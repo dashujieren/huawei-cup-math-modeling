@@ -797,6 +797,52 @@ class JointState:
     missions: list[RelayMission]
 
 
+OBJECTIVE_KEYS = ("soft_weighted_lateness_s", "joint_makespan_s",
+                  "total_energy_kwh", "total_sorties")
+
+
+def _objective_metrics(state: JointState) -> dict[str, float]:
+    """按最终连续时刻和实际能耗计算题面四项指标。"""
+    return {
+        "soft_weighted_lateness_s": sum(
+            float(d["priority"]) * float(d["soft_lateness_s"])
+            for d in state.deliveries if d["hard_deadline_s"] is None),
+        "joint_makespan_s": max(
+            [float(s["return_s"]) for s in state.sorties] +
+            [float(m.return_s) for m in state.missions], default=0.0),
+        "total_energy_kwh": sum(float(s["energy_kwh"]) for s in state.sorties) +
+                            sum(float(m.energy_kwh) for m in state.missions),
+        "total_sorties": len(state.sorties) + len(state.missions),
+    }
+
+
+def equal_weight_ratios(metrics: Mapping[str, float],
+                        reference: Mapping[str, float]) -> dict[str, float]:
+    """逐项基线归一化；零基线项保留基线分值 1。"""
+    if any(float(reference[key]) < 0 for key in OBJECTIVE_KEYS):
+        raise ValueError("基线四项指标不可为负")
+    return {key: (float(metrics[key]) / float(reference[key])
+                  if float(reference[key]) > 0 else 1.0 + float(metrics[key]))
+            for key in OBJECTIVE_KEYS}
+
+
+def equal_weight_score(metrics: Mapping[str, float],
+                       reference: Mapping[str, float]) -> float:
+    """四项按用户选定的等权规则求平均，PASS 基线得分为 1。"""
+    return sum(equal_weight_ratios(metrics, reference).values()) / len(OBJECTIVE_KEYS)
+
+
+def _equal_weight_coefficients(reference: Mapping[str, float]) -> dict[str, int]:
+    """CP-SAT 整数近似目标；最终接纳仍使用实际浮点指标。"""
+    units = {"soft_weighted_lateness_s": 1.0,
+             "joint_makespan_s": 1.0,
+             "total_energy_kwh": 1000.0,  # 模型能量项单位为 Wh
+             "total_sorties": 1.0}
+    scale = 1_000_000_000
+    return {key: max(1, round(scale / (max(float(reference[key]), 1.0) * units[key])))
+            for key in OBJECTIVE_KEYS}
+
+
 @dataclass
 class RouteProfile:
     """路线的通信几何只计算一次，排程仅平移时间。"""
@@ -1064,7 +1110,7 @@ def _save_verification(table_dir: Path, validation: dict[str, Any],
                "detail": (f"PASS={comm['certified_interval_count']}, "
                           f"FAIL={comm['failed_interval_count']}, "
                           f"UNVERIFIED={comm['unverified_interval_count']}")},
-               {"check_id": scheme_check_id, "status": validation["status"],
+              {"check_id": scheme_check_id, "status": validation["status"],
                "detail": f"未覆盖诊断行={validation['diagnostic_uncovered_rows']}"}]
     write_rows(table_dir / "Q3_验收检查.csv", checks,
                ["check_id", "status", "detail"])
@@ -1548,6 +1594,7 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                  resource_available: dict[str, dict[str, int]] | None = None,
                  time_grid_s: int | None = None,
                  objective_mode: str = "balanced",
+                 objective_reference: Mapping[str, float] | None = None,
                  metric_limits: Mapping[str, int] | None = None,
                  explicit_relay_uavs: bool = True,
                  search_seed: int = 20260923) -> tuple[dict[str, Any] | None, dict[str, Any]]:
@@ -1920,7 +1967,7 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                 sum(service_wh_per_second * (service_ends[r] - readies[r]) +
                     round(relay_power_kw * params["link_setup_s"] * 1000 / 3600) * active[r]
                     for r in range(slots)))
-    # 方案二使用焦耳统一计量目标；上面的 Wh 近似仅保留给旧方案目标。
+    # 方案二的能耗上下界与目标使用焦耳，避免 Wh 舍入引入明显误差。
     energy_j = (
         sum(round(float(choice.option["energy_kwh"]) * 3_600_000) * selected[i]
             for i, choice in enumerate(pool))
@@ -1955,6 +2002,16 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
             model.Minimize(10000 * sum(weight * var for var, weight in late_vars) +
                            10 * makespan + transport_wh + relay_wh +
                            50 * sum(selected) + 100 * sum(active))
+        elif objective_mode == "equal_normalized":
+            if objective_reference is None:
+                raise ValueError("等权目标必须提供已验收基线的四项指标")
+            coef = _equal_weight_coefficients(objective_reference)
+            model.Minimize(
+                coef["soft_weighted_lateness_s"] *
+                sum(weight * var for var, weight in late_vars) +
+                coef["joint_makespan_s"] * makespan +
+                coef["total_energy_kwh"] * (transport_wh + relay_wh) +
+                coef["total_sorties"] * (sum(selected) + sum(active)))
         elif objective_mode == "scheme2_lateness":
             model.Minimize(weighted_late)
         elif objective_mode == "scheme2_makespan":
@@ -2193,13 +2250,85 @@ def _geometry_cache_key(source: dict[str, Any], step: float, spacing: int, limit
     return hashlib.sha256(json.dumps(key, sort_keys=True).encode("utf-8")).hexdigest()
 
 
+def _solution_hints(solution: dict[str, Any]) -> dict[str, Any]:
+    """把分批构造的中继槽重新压紧，仅作为搜索提示而不固定排程。"""
+    relays = sorted(solution["relays"], key=lambda row: (row[4], row[0]))
+    return {
+        "routes": {(solution["pool"][i].task.route.visits,
+                    solution["pool"][i].kind): start
+                   for i, start, *_ in solution["routes"]},
+        "relays": [(slot, site, uav, unit, ready, end)
+                   for slot, (_, site, uav, unit, ready, end) in enumerate(relays)],
+    }
+
+
+def _search_equal_improvement(
+        ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate],
+        choices: list[JointChoice], baseline_solution: dict[str, Any],
+        baseline_state: JointState, data_run: Path, links: LinkEvaluator,
+        dem: Any, table_dir: Path, horizon: int, slots: int,
+        seconds: float, workers: int
+        ) -> tuple[JointState, dict[str, Any]]:
+    """先重排已选航次，再开放合并路线；每个候选均独立复核。"""
+    reference = _objective_metrics(baseline_state)
+    best_state, best_score = baseline_state, equal_weight_score(reference, reference)
+    best_solution = baseline_solution
+    selected = [baseline_solution["pool"][i] for i, *_ in baseline_solution["routes"]]
+    stages = (("critical_shift", selected, True),
+              ("route_merge", choices, False))
+    report: dict[str, Any] = {
+        "status": "NO_IMPROVEMENT", "baseline": reference,
+        "baseline_score": best_score, "stages": [],
+        "global_optimality_proven": False,
+    }
+    for stage, pool, all_routes in stages:
+        hints = _solution_hints(best_solution)
+        stage_slots = max(slots, len(hints["relays"]))
+        print(f"Q3 等权优化 {stage}：{len(pool)} 个路线/机型候选、"
+              f"{stage_slots} 个中继槽、{seconds / len(stages):.1f}s 预算", flush=True)
+        try:
+            candidate, solver_report = _solve_joint(
+                ctx, relay, sites, pool, horizon, stage_slots,
+                seconds / len(stages), workers, False, hints=hints,
+                require_all_routes=all_routes,
+                objective_mode="equal_normalized", objective_reference=reference)
+            row: dict[str, Any] = {"stage": stage, "solver": solver_report}
+            if candidate is not None:
+                state = _materialize_solution(ctx, relay, sites, candidate)
+                candidate_dir = table_dir / f"_candidate_{stage}"
+                _save_joint_tables(candidate_dir, state, relay)
+                validation = validate_official_tables(candidate_dir, data_run, links, dem)
+                _save_verification(candidate_dir, validation)
+                metrics = _objective_metrics(state)
+                score = equal_weight_score(metrics, reference)
+                row.update({"validation_status": validation["status"],
+                            "metrics": metrics, "score": score})
+                if validation["status"] == "PASS" and score < best_score - 1e-8:
+                    best_state, best_score, best_solution = state, score, candidate
+                    row["accepted"] = True
+                else:
+                    row["accepted"] = False
+            report["stages"].append(row)
+        except (ValueError, KeyError, AssertionError, RuntimeError, IndexError) as exc:
+            report["stages"].append({"stage": stage, "error":
+                                     f"{type(exc).__name__}: {exc}"})
+    final_metrics = _objective_metrics(best_state)
+    report.update({"status": "IMPROVED" if best_score < report["baseline_score"] - 1e-8
+                   else "NO_IMPROVEMENT",
+                   "final": final_metrics,
+                   "final_normalized": equal_weight_ratios(final_metrics, reference),
+                   "final_score": best_score})
+    return best_state, report
+
+
 def run_scheme1(data_run: Path, output_root: Path, sample_step_s: float,
-                spacing_m: int, site_limit: int, relay_slots: int,
-                horizon: int, transport_seconds: float, relay_seconds: float,
-                workers: int, attempts: int, shift_s: int) -> dict[str, Any]:
+                 spacing_m: int, site_limit: int, relay_slots: int,
+                 horizon: int, transport_seconds: float, relay_seconds: float,
+                 workers: int, attempts: int, shift_s: int,
+                 optimize_seconds: float = 0.0) -> dict[str, Any]:
     if (sample_step_s <= 0 or min(spacing_m, site_limit, relay_slots,
                                  horizon, workers, attempts, shift_s) < 1 or
-            transport_seconds <= 0 or relay_seconds <= 0):
+             transport_seconds <= 0 or relay_seconds <= 0 or optimize_seconds < 0):
         raise ValueError("分段、候选数、资源时域、尝试次数和时间预算必须为正")
     relay, dem, links, source_meta = _scene(data_run)
     ctx = Context(data_run)
@@ -2242,8 +2371,9 @@ def run_scheme1(data_run: Path, output_root: Path, sample_step_s: float,
     print(f"Q3：{len(choices)} 个可认证的路线/机型组合；"
           "开始硬时限货物与中继联合排程", flush=True)
     stamp = datetime.now().strftime("%y%m%d_%H%M%S_%f")
-    table_dir = output_root / f"q3_opt1_{stamp}_table"
-    figure_dir = output_root / f"q3_opt1_{stamp}_figure"
+    run_label = "q3_equal" if optimize_seconds > 0 else "q3_opt1"
+    table_dir = output_root / f"{run_label}_{stamp}_table"
+    figure_dir = output_root / f"{run_label}_{stamp}_figure"
     table_dir.mkdir(parents=True, exist_ok=False)
     # 先联合解决有硬时限的货箱。中继站点、启停、充电和运输时间同时决策，
     # 避免运输先占满早期时窗后，中继只能反复宣告无法覆盖。
@@ -2318,8 +2448,26 @@ def run_scheme1(data_run: Path, output_root: Path, sample_step_s: float,
         return summary
     full_solution, winning_sites, relay_report = winning
     state = _materialize_solution(ctx, relay, winning_sites, full_solution)
-    _save_joint_tables(table_dir, state, relay)
-    validation = validate_official_tables(table_dir, data_run, links, dem)
+    baseline_dir = table_dir / "_baseline" if optimize_seconds > 0 else table_dir
+    _save_joint_tables(baseline_dir, state, relay)
+    validation = validate_official_tables(baseline_dir, data_run, links, dem)
+    if optimize_seconds > 0:
+        _save_verification(baseline_dir, validation)
+        if validation["status"] == "PASS":
+            state, optimization = _search_equal_improvement(
+                ctx, relay, winning_sites, choices, full_solution, state,
+                data_run, links, dem, table_dir, horizon, relay_slots,
+                optimize_seconds, workers)
+            summary["optimization"] = optimization
+        else:
+            summary["optimization"] = {
+                "status": "SKIPPED_BASELINE_NOT_PASS",
+                "baseline_validation_status": validation["status"]}
+        _save_joint_tables(table_dir, state, relay)
+        validation = validate_official_tables(table_dir, data_run, links, dem)
+        if (validation["status"] != "PASS" and
+                summary["optimization"]["status"] == "IMPROVED"):
+            raise AssertionError("候选预验收 PASS 但最终导出未通过，停止交付")
     _save_verification(table_dir, validation)
     summary.update({
         "status": validation["status"],
@@ -2344,10 +2492,21 @@ def run_scheme1(data_run: Path, output_root: Path, sample_step_s: float,
     })
     summary["total_energy_kwh"] = (summary["transport_energy_kwh"] +
                                    summary["relay_energy_kwh"])
+    if optimize_seconds > 0 and summary["optimization"]["status"] in (
+            "IMPROVED", "NO_IMPROVEMENT"):
+        summary["method"] += "; normalized equal-weight incumbent-guided joint search"
+        summary["interpretation"] = (
+            "候选方案通过独立复核且等权得分低于本次 PASS 基线；未证明全局最优"
+            if summary["optimization"]["status"] == "IMPROVED" else
+            "限时搜索未找到更优且通过独立复核的方案；保留本次 PASS 基线，未证明最优")
+        summary["equal_weight_score"] = equal_weight_score(
+            _objective_metrics(state), summary["optimization"]["baseline"])
     if validation["status"] == "PASS":
         _save_figures(figure_dir, state.slices, state.assigned, state.missions)
         (table_dir / "Q3_READY.txt").write_text(
-            "Q3 decomposed scheme 1 independently verified PASS\n"
+            ("Q3 equal-weight search independently verified PASS\n"
+             if optimize_seconds > 0 else
+             "Q3 decomposed scheme 1 independently verified PASS\n") +
             f"source_manifest_sha256={source_meta['source_manifest_sha256']}\n",
             encoding="utf-8")
         summary["figure_dir"] = str(figure_dir.resolve())
@@ -2360,7 +2519,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--data-run", type=Path, default=None,
                         help="0_outputs 中经过验收的原始数据目录")
     parser.add_argument("--output-root", type=Path,
-                        default=CODE_DIR / "3_outputs" / "1_optimize")
+                        default=None, help="结果根目录；优化模式默认写入 3_outputs/2_equal_optimize")
+    parser.add_argument("--optimize-seconds", type=float, default=0.0,
+                        help="等权优化总搜索秒数；0 表示只运行原基线")
     parser.add_argument("--sample-step-s", type=float, default=20.0,
                         help="通信候选原子的最长秒数；可设 15，最终仍做连续区间复核")
     parser.add_argument("--candidate-spacing-m", type=int, default=500)
@@ -2392,15 +2553,23 @@ def main(argv: list[str] | None = None) -> int:
                           "relay_resource_status": report["relay_resources"]["status"]},
                          ensure_ascii=False, indent=2))
         return 0 if report["status"] == "PASS" else 2
-    summary = run_scheme1(data_run, args.output_root.resolve(),
-                          args.sample_step_s, args.candidate_spacing_m,
-                          args.relay_sites, args.relay_slots, args.horizon_s,
-                          args.transport_time_limit_s, args.relay_time_limit_s,
-                          args.workers, args.attempts, args.feedback_shift_s)
+    output_root = (args.output_root if args.output_root is not None else
+                   CODE_DIR / "3_outputs" /
+                   ("2_equal_optimize" if args.optimize_seconds > 0 else "1_optimize"))
+    summary = run_scheme1(data_run, output_root.resolve(),
+                           args.sample_step_s, args.candidate_spacing_m,
+                           args.relay_sites, args.relay_slots, args.horizon_s,
+                           args.transport_time_limit_s, args.relay_time_limit_s,
+                           args.workers, args.attempts, args.feedback_shift_s,
+                           args.optimize_seconds)
     print(json.dumps({key: summary.get(key) for key in (
         "status", "transport_sorties", "relay_sorties", "delivered_boxes",
-        "joint_makespan_s", "total_energy_kwh", "table_dir", "figure_dir")},
+        "joint_makespan_s", "total_energy_kwh", "equal_weight_score",
+        "table_dir", "figure_dir")},
         ensure_ascii=False, indent=2))
+    if args.optimize_seconds > 0:
+        print("等权优化状态：" + summary.get("optimization", {}).get(
+            "status", "BASELINE_INCOMPLETE"), flush=True)
     return 0 if summary["status"] == "PASS" else 2
 
 # 通信与中继资源复核内置于同一脚本，保持单文件交付。

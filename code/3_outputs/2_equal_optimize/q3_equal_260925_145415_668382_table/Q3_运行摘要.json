@@ -1,0 +1,141 @@
+{
+  "status": "PASS",
+  "method": "complementary relay sites; hard-deadline joint CP-SAT; grouped soft-delivery insertion; independent continuous verification; normalized equal-weight incumbent-guided joint search",
+  "interpretation": "候选方案通过独立复核且等权得分低于本次 PASS 基线；未证明全局最优",
+  "source": {
+    "data_run": "D:\\Documents\\ChatGPT\\研究生数学建模比赛\\D题\\code\\0_outputs\\run_20260924_154122",
+    "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+    "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+  },
+  "candidate_stats": {
+    "backhaul": 529,
+    "grid_points": 320,
+    "candidate_count": 1711
+  },
+  "shortlisted_relay_sites": 20,
+  "attempts": [
+    {
+      "stage": "hard_joint",
+      "result": {
+        "stage": "hard",
+        "solver_status": "OPTIMAL",
+        "route_options": 45,
+        "relay_sites": 20,
+        "relay_slots": 10,
+        "boxes": 31,
+        "wall_time_s": 79.7900437,
+        "branches": 1114196,
+        "conflicts": 229939,
+        "time_limit_s": 120.0,
+        "selected_transport_sorties": 15,
+        "selected_relay_sorties": 7
+      }
+    },
+    {
+      "stage": "all_boxes_joint",
+      "result": {
+        "stage": "full",
+        "solver_status": "OPTIMAL",
+        "route_options": 45,
+        "relay_sites": 20,
+        "relay_slots": 18,
+        "boxes": 80,
+        "wall_time_s": 3.2158173000000003,
+        "branches": 48139,
+        "conflicts": 4425,
+        "time_limit_s": 120.0,
+        "selected_transport_sorties": 31,
+        "selected_relay_sorties": 15
+      }
+    }
+  ],
+  "attempt_count": 2,
+  "global_optimality_proven": false,
+  "table_dir": "D:\\codex\\huawei-cup-math-modeling\\code\\3_outputs\\2_equal_optimize\\q3_equal_260925_145415_668382_table",
+  "figure_dir": "D:\\codex\\huawei-cup-math-modeling\\code\\3_outputs\\2_equal_optimize\\q3_equal_260925_145415_668382_figure",
+  "optimization": {
+    "status": "IMPROVED",
+    "baseline": {
+      "soft_weighted_lateness_s": 4589634.259013121,
+      "joint_makespan_s": 23094.170391878757,
+      "total_energy_kwh": 106.01941298085977,
+      "total_sorties": 46
+    },
+    "baseline_score": 1.0,
+    "stages": [
+      {
+        "stage": "critical_shift",
+        "solver": {
+          "stage": "full",
+          "solver_status": "FEASIBLE",
+          "route_options": 31,
+          "relay_sites": 20,
+          "relay_slots": 18,
+          "boxes": 80,
+          "wall_time_s": 150.12343130000002,
+          "branches": 940841,
+          "conflicts": 226641,
+          "time_limit_s": 150.0,
+          "objective_value": 3136008209.0,
+          "best_bound": 2131898211.0,
+          "selected_transport_sorties": 31,
+          "selected_relay_sorties": 10
+        },
+        "validation_status": "PASS",
+        "metrics": {
+          "soft_weighted_lateness_s": 1725677.8304099666,
+          "joint_makespan_s": 17882.244235235496,
+          "total_energy_kwh": 103.66006777096389,
+          "total_sorties": 41
+        },
+        "score": 0.7548409039812767,
+        "accepted": true
+      },
+      {
+        "stage": "route_merge",
+        "solver": {
+          "stage": "full",
+          "solver_status": "UNKNOWN",
+          "route_options": 316,
+          "relay_sites": 20,
+          "relay_slots": 18,
+          "boxes": 80,
+          "wall_time_s": 151.12572980000002,
+          "branches": 760403,
+          "conflicts": 72186,
+          "time_limit_s": 150.0
+        }
+      }
+    ],
+    "global_optimality_proven": false,
+    "final": {
+      "soft_weighted_lateness_s": 1725677.8304099666,
+      "joint_makespan_s": 17882.244235235496,
+      "total_energy_kwh": 103.66006777096389,
+      "total_sorties": 41
+    },
+    "final_normalized": {
+      "soft_weighted_lateness_s": 0.37599462898837344,
+      "joint_makespan_s": 0.7743185371804446,
+      "total_energy_kwh": 0.977746101930202,
+      "total_sorties": 0.8913043478260869
+    },
+    "final_score": 0.7548409039812767
+  },
+  "candidate_pool_optimality_proven": false,
+  "relay_solver_status": "OPTIMAL",
+  "transport_sorties": 31,
+  "relay_sorties": 10,
+  "delivered_boxes": 80,
+  "transport_last_return_s": 17882.244235235496,
+  "relay_last_return_s": 17577.41833879541,
+  "joint_makespan_s": 17882.244235235496,
+  "transport_energy_kwh": 95.8666589874421,
+  "relay_energy_kwh": 7.793408783521803,
+  "soft_weighted_lateness_s": 1725677.8304099666,
+  "communication_status": "PASS",
+  "transport_status": "PASS",
+  "relay_resource_status": "PASS",
+  "total_energy_kwh": 103.66006777096389,
+  "equal_weight_score": 0.7548409039812767
+}
