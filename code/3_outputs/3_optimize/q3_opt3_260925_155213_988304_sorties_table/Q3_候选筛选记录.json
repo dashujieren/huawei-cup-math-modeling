@@ -1,0 +1,370 @@
+[
+  {
+    "round": 1,
+    "goal": "sorties",
+    "grade": "G0",
+    "released": 6,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 42,
+      "duplicate": 97,
+      "generated": 353,
+      "budget_truncated": 178
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 67
+    },
+    "site_count": 24,
+    "global_active_choices": 98,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 2,
+    "goal": "sorties",
+    "grade": "G1",
+    "released": 6,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 935,
+      "duplicate": 59,
+      "generated": 1391,
+      "budget_truncated": 361
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 87
+    },
+    "site_count": 24,
+    "global_active_choices": 181,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 3,
+    "goal": "sorties",
+    "grade": "G2",
+    "released": 6,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 338,
+      "duplicate": 113,
+      "generated": 849,
+      "budget_truncated": 362
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 92
+    },
+    "site_count": 24,
+    "global_active_choices": 181,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 4,
+    "goal": "sorties",
+    "grade": "G0",
+    "released": 28,
+    "full_reoptimization": true,
+    "generated": {
+      "physical_or_deadline": 2885,
+      "duplicate": 240,
+      "generated": 5068,
+      "budget_truncated": 1907
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 29,
+      "coverage_rejected": 0,
+      "choice_budget": 7,
+      "new_choices": 96
+    },
+    "site_count": 24,
+    "global_active_choices": 251,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 5,
+    "goal": "sorties",
+    "grade": "G1",
+    "released": 8,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 431,
+      "duplicate": 106,
+      "generated": 715,
+      "budget_truncated": 142
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 91
+    },
+    "site_count": 24,
+    "global_active_choices": 234,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 6,
+    "goal": "sorties",
+    "grade": "G2",
+    "released": 8,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 4662,
+      "duplicate": 40,
+      "generated": 5145,
+      "budget_truncated": 407
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 86
+    },
+    "site_count": 24,
+    "global_active_choices": 258,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 7,
+    "goal": "sorties",
+    "grade": "G0",
+    "released": 8,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 451,
+      "duplicate": 238,
+      "generated": 1236,
+      "budget_truncated": 511
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 96
+    },
+    "site_count": 24,
+    "global_active_choices": 234,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 8,
+    "goal": "sorties",
+    "grade": "G1",
+    "released": 27,
+    "full_reoptimization": true,
+    "generated": {
+      "physical_or_deadline": 2523,
+      "duplicate": 117,
+      "generated": 4511,
+      "budget_truncated": 1835
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 30,
+      "coverage_rejected": 0,
+      "choice_budget": 6,
+      "new_choices": 96
+    },
+    "site_count": 24,
+    "global_active_choices": 234,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 9,
+    "goal": "makespan",
+    "grade": "G2",
+    "released": 12,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 1080,
+      "duplicate": 99,
+      "generated": 1501,
+      "budget_truncated": 286
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 89
+    },
+    "site_count": 24,
+    "global_active_choices": 234,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 10,
+    "goal": "energy",
+    "grade": "G0",
+    "released": 12,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 1592,
+      "duplicate": 173,
+      "generated": 2175,
+      "budget_truncated": 374
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 31,
+      "coverage_rejected": 0,
+      "choice_budget": 5,
+      "new_choices": 96
+    },
+    "site_count": 24,
+    "global_active_choices": 234,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 11,
+    "goal": "lateness",
+    "grade": "G1",
+    "released": 12,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 1077,
+      "duplicate": 146,
+      "generated": 2231,
+      "budget_truncated": 972
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 33,
+      "coverage_rejected": 0,
+      "choice_budget": 3,
+      "new_choices": 96
+    },
+    "site_count": 24,
+    "global_active_choices": 234,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 12,
+    "goal": "sorties",
+    "grade": "G2",
+    "released": 27,
+    "full_reoptimization": true,
+    "generated": {
+      "physical_or_deadline": 2667,
+      "duplicate": 221,
+      "generated": 6936,
+      "budget_truncated": 4012
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 30,
+      "coverage_rejected": 0,
+      "choice_budget": 6,
+      "new_choices": 95
+    },
+    "site_count": 24,
+    "global_active_choices": 234,
+    "active_budget_exceeded": false
+  },
+  {
+    "round": 13,
+    "goal": "makespan",
+    "grade": "G0",
+    "released": 12,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 944,
+      "duplicate": 83,
+      "generated": 1194,
+      "budget_truncated": 131
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 84
+    },
+    "site_count": 24,
+    "global_active_choices": 280,
+    "active_budget_exceeded": true
+  },
+  {
+    "round": 14,
+    "goal": "energy",
+    "grade": "G1",
+    "released": 12,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 918,
+      "duplicate": 190,
+      "generated": 1578,
+      "budget_truncated": 434
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 93
+    },
+    "site_count": 24,
+    "global_active_choices": 331,
+    "active_budget_exceeded": true
+  },
+  {
+    "round": 15,
+    "goal": "lateness",
+    "grade": "G2",
+    "released": 12,
+    "full_reoptimization": false,
+    "generated": {
+      "physical_or_deadline": 385,
+      "duplicate": 161,
+      "generated": 1584,
+      "budget_truncated": 1002
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 35,
+      "coverage_rejected": 0,
+      "choice_budget": 1,
+      "new_choices": 96
+    },
+    "site_count": 24,
+    "global_active_choices": 331,
+    "active_budget_exceeded": true
+  },
+  {
+    "round": 16,
+    "goal": "sorties",
+    "grade": "G0",
+    "released": 24,
+    "full_reoptimization": true,
+    "generated": {
+      "physical_or_deadline": 8314,
+      "duplicate": 115,
+      "generated": 10134,
+      "budget_truncated": 1669
+    },
+    "certified": {
+      "packages": 36,
+      "complete": 35,
+      "coverage_rejected": 0,
+      "choice_budget": 1,
+      "new_choices": 96
+    },
+    "site_count": 28,
+    "global_active_choices": 331,
+    "active_budget_exceeded": true
+  }
+]

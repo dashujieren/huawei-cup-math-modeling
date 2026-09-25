@@ -1,0 +1,116 @@
+{
+  "status": "PASS",
+  "source_scheme2_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\2_optimize\\q3_opt2_260925_143402_492744_table",
+  "representatives": [
+    {
+      "status": "PASS",
+      "method": "Q3 scheme 3: dynamic rebatching, adaptive joint scheduling, Pareto archive",
+      "source_scheme2_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\2_optimize\\q3_opt2_260925_143402_492744_table",
+      "source": {
+        "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+        "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+        "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+      },
+      "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+      "code_sha256": {
+        "q3_3_optimize.py": "c893e377f002ceac3d43dcc4935f8ea1c035efcdb96deb720751e72b41f56234",
+        "q3_2_optimize.py": "298d30aa88b52e178adff8775b27014cbe884ed2ad8ac47f8497f35885c0991c",
+        "q3_1_optimize.py": "a58e6e10d39e746d9347a5f544639ff3734dd79af74f48501695c0cd585affc2",
+        "q2_1_optimize.py": "6dd36782f21659551c4601cbfeeee1f83b0cd9291a658324def1a9c1086f9c33"
+      },
+      "goal": "sorties",
+      "grade": "G1",
+      "stage": "第14轮/邻域/energy",
+      "global_optimality_proven": false,
+      "reference_metrics": {
+        "weighted_lateness": 632182.8956649068,
+        "makespan_s": 15159.195158195356,
+        "energy_kwh": 91.96517872557403,
+        "transport_sorties": 31,
+        "relay_sorties": 12
+      },
+      "final_metrics": {
+        "weighted_lateness": 550194.0010686526,
+        "makespan_s": 12846.727665741508,
+        "energy_kwh": 75.10511214044642,
+        "transport_sorties": 24,
+        "relay_sorties": 10
+      },
+      "representative_count": 2,
+      "archive_count": 2,
+      "transport_status": "PASS",
+      "communication_status": "PASS",
+      "relay_resource_status": "PASS",
+      "search_wall_s": 884.875,
+      "candidate_stats": {
+        "certified": 729,
+        "uncovered_routes": 6,
+        "new_sites": 8,
+        "site_budget_reached": 0,
+        "site_grid_exceeded": 0
+      },
+      "candidate_sites": 28,
+      "candidate_site_limit": 48,
+      "candidate_stop_limit": 2,
+      "relay_slot_limit": 18,
+      "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table",
+      "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_figure"
+    },
+    {
+      "status": "PASS",
+      "method": "Q3 scheme 3: dynamic rebatching, adaptive joint scheduling, Pareto archive",
+      "source_scheme2_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\2_optimize\\q3_opt2_260925_143402_492744_table",
+      "source": {
+        "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+        "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+        "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+      },
+      "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+      "code_sha256": {
+        "q3_3_optimize.py": "c893e377f002ceac3d43dcc4935f8ea1c035efcdb96deb720751e72b41f56234",
+        "q3_2_optimize.py": "298d30aa88b52e178adff8775b27014cbe884ed2ad8ac47f8497f35885c0991c",
+        "q3_1_optimize.py": "a58e6e10d39e746d9347a5f544639ff3734dd79af74f48501695c0cd585affc2",
+        "q2_1_optimize.py": "6dd36782f21659551c4601cbfeeee1f83b0cd9291a658324def1a9c1086f9c33"
+      },
+      "goal": "lateness",
+      "grade": "G1",
+      "stage": "第11轮/邻域/lateness",
+      "global_optimality_proven": false,
+      "reference_metrics": {
+        "weighted_lateness": 632182.8956649068,
+        "makespan_s": 15159.195158195356,
+        "energy_kwh": 91.96517872557403,
+        "transport_sorties": 31,
+        "relay_sorties": 12
+      },
+      "final_metrics": {
+        "weighted_lateness": 540361.616638582,
+        "makespan_s": 15159.195158195356,
+        "energy_kwh": 90.58917221773667,
+        "transport_sorties": 29,
+        "relay_sorties": 11
+      },
+      "representative_count": 2,
+      "archive_count": 2,
+      "transport_status": "PASS",
+      "communication_status": "PASS",
+      "relay_resource_status": "PASS",
+      "search_wall_s": 884.875,
+      "candidate_stats": {
+        "certified": 729,
+        "uncovered_routes": 6,
+        "new_sites": 8,
+        "site_budget_reached": 0,
+        "site_grid_exceeded": 0
+      },
+      "candidate_sites": 28,
+      "candidate_site_limit": 48,
+      "candidate_stop_limit": 2,
+      "relay_slot_limit": 18,
+      "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_lateness_table",
+      "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_lateness_figure"
+    }
+  ],
+  "search_wall_s": 884.875,
+  "global_optimality_proven": false
+}
