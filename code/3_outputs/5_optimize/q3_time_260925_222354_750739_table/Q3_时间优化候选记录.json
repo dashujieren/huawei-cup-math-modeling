@@ -1,0 +1,376 @@
+[
+  {
+    "round": 1,
+    "grade": "G0",
+    "released": 6,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 1559,
+      "duplicate": 19,
+      "generated": 2394,
+      "budget_truncated": 756
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 44,
+      "coverage_rejected": 0,
+      "choice_budget": 16,
+      "new_choices": 130
+    },
+    "new_type_options": 25,
+    "active_options": 175,
+    "site_count": 21
+  },
+  {
+    "round": 2,
+    "grade": "G1",
+    "released": 6,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 1559,
+      "duplicate": 19,
+      "generated": 2394,
+      "budget_truncated": 756
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 44,
+      "coverage_rejected": 0,
+      "choice_budget": 16,
+      "new_choices": 130
+    },
+    "new_type_options": 0,
+    "active_options": 175,
+    "site_count": 21
+  },
+  {
+    "round": 3,
+    "grade": "G2",
+    "released": 26,
+    "full": true,
+    "generated": {
+      "physical_or_deadline": 11748,
+      "duplicate": 139,
+      "generated": 18070,
+      "budget_truncated": 6123
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 31,
+      "coverage_rejected": 0,
+      "choice_budget": 29,
+      "new_choices": 130
+    },
+    "new_type_options": 0,
+    "active_options": 284,
+    "site_count": 25
+  },
+  {
+    "round": 4,
+    "grade": "G0",
+    "released": 10,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 2199,
+      "duplicate": 72,
+      "generated": 4569,
+      "budget_truncated": 2238
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 31,
+      "coverage_rejected": 0,
+      "choice_budget": 29,
+      "new_choices": 130
+    },
+    "new_type_options": 0,
+    "active_options": 319,
+    "site_count": 25
+  },
+  {
+    "round": 5,
+    "grade": "G1",
+    "released": 10,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 6334,
+      "duplicate": 115,
+      "generated": 9978,
+      "budget_truncated": 3469
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 60,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 115
+    },
+    "new_type_options": 0,
+    "active_options": 350,
+    "site_count": 25
+  },
+  {
+    "round": 6,
+    "grade": "G2",
+    "released": 27,
+    "full": true,
+    "generated": {
+      "physical_or_deadline": 9315,
+      "duplicate": 205,
+      "generated": 11975,
+      "budget_truncated": 2395
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 28,
+      "coverage_rejected": 0,
+      "choice_budget": 32,
+      "new_choices": 130
+    },
+    "new_type_options": 3,
+    "active_options": 350,
+    "site_count": 29
+  },
+  {
+    "round": 7,
+    "grade": "G0",
+    "released": 10,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 2487,
+      "duplicate": 24,
+      "generated": 4829,
+      "budget_truncated": 2258
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 31,
+      "coverage_rejected": 0,
+      "choice_budget": 29,
+      "new_choices": 130
+    },
+    "new_type_options": 20,
+    "active_options": 350,
+    "site_count": 29
+  },
+  {
+    "round": 8,
+    "grade": "G1",
+    "released": 16,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 4881,
+      "duplicate": 83,
+      "generated": 10098,
+      "budget_truncated": 5074
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 47,
+      "coverage_rejected": 0,
+      "choice_budget": 13,
+      "new_choices": 130
+    },
+    "new_type_options": 8,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 9,
+    "grade": "G2",
+    "released": 28,
+    "full": true,
+    "generated": {
+      "physical_or_deadline": 13503,
+      "duplicate": 158,
+      "generated": 16646,
+      "budget_truncated": 2925
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 27,
+      "coverage_rejected": 0,
+      "choice_budget": 33,
+      "new_choices": 130
+    },
+    "new_type_options": 4,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 10,
+    "grade": "G0",
+    "released": 16,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 5574,
+      "duplicate": 46,
+      "generated": 8488,
+      "budget_truncated": 2808
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 34,
+      "coverage_rejected": 0,
+      "choice_budget": 26,
+      "new_choices": 130
+    },
+    "new_type_options": 0,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 11,
+    "grade": "G1",
+    "released": 16,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 8811,
+      "duplicate": 93,
+      "generated": 12927,
+      "budget_truncated": 3963
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 38,
+      "coverage_rejected": 0,
+      "choice_budget": 22,
+      "new_choices": 130
+    },
+    "new_type_options": 0,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 12,
+    "grade": "G2",
+    "released": 28,
+    "full": true,
+    "generated": {
+      "physical_or_deadline": 24269,
+      "duplicate": 223,
+      "generated": 29485,
+      "budget_truncated": 4933
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 46,
+      "coverage_rejected": 0,
+      "choice_budget": 14,
+      "new_choices": 130
+    },
+    "new_type_options": 19,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 13,
+    "grade": "G0",
+    "released": 16,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 4479,
+      "duplicate": 66,
+      "generated": 8152,
+      "budget_truncated": 3547
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 37,
+      "coverage_rejected": 0,
+      "choice_budget": 23,
+      "new_choices": 130
+    },
+    "new_type_options": 4,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 14,
+    "grade": "G1",
+    "released": 16,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 9525,
+      "duplicate": 99,
+      "generated": 11151,
+      "budget_truncated": 1467
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 47,
+      "coverage_rejected": 0,
+      "choice_budget": 13,
+      "new_choices": 130
+    },
+    "new_type_options": 5,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 15,
+    "grade": "G2",
+    "released": 28,
+    "full": true,
+    "generated": {
+      "physical_or_deadline": 2219,
+      "duplicate": 368,
+      "generated": 5982,
+      "budget_truncated": 3335
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 33,
+      "coverage_rejected": 0,
+      "choice_budget": 27,
+      "new_choices": 129
+    },
+    "new_type_options": 0,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 16,
+    "grade": "G0",
+    "released": 16,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 4702,
+      "duplicate": 50,
+      "generated": 7283,
+      "budget_truncated": 2471
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 36,
+      "coverage_rejected": 0,
+      "choice_budget": 24,
+      "new_choices": 130
+    },
+    "new_type_options": 0,
+    "active_options": 350,
+    "site_count": 33
+  },
+  {
+    "round": 17,
+    "grade": "G1",
+    "released": 16,
+    "full": false,
+    "generated": {
+      "physical_or_deadline": 6392,
+      "duplicate": 151,
+      "generated": 10900,
+      "budget_truncated": 4297
+    },
+    "certified": {
+      "packages": 60,
+      "complete": 60,
+      "coverage_rejected": 0,
+      "choice_budget": 0,
+      "new_choices": 122
+    },
+    "new_type_options": 0,
+    "active_options": 350,
+    "site_count": 33
+  }
+]
