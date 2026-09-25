@@ -1110,7 +1110,7 @@ def _save_verification(table_dir: Path, validation: dict[str, Any],
                "detail": (f"PASS={comm['certified_interval_count']}, "
                           f"FAIL={comm['failed_interval_count']}, "
                           f"UNVERIFIED={comm['unverified_interval_count']}")},
-               {"check_id": scheme_check_id, "status": validation["status"],
+              {"check_id": scheme_check_id, "status": validation["status"],
                "detail": f"未覆盖诊断行={validation['diagnostic_uncovered_rows']}"}]
     write_rows(table_dir / "Q3_验收检查.csv", checks,
                ["check_id", "status", "detail"])
@@ -1594,11 +1594,8 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                  resource_available: dict[str, dict[str, int]] | None = None,
                  time_grid_s: int | None = None,
                  objective_mode: str = "balanced",
-<<<<<<< HEAD
                  objective_reference: Mapping[str, float] | None = None,
-=======
                  metric_limits: Mapping[str, int] | None = None,
->>>>>>> 5f2f7185d793316650042d4cd868b2c6cf3a90c1
                  explicit_relay_uavs: bool = True,
                  search_seed: int = 20260923) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     try:
@@ -1970,7 +1967,7 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                 sum(service_wh_per_second * (service_ends[r] - readies[r]) +
                     round(relay_power_kw * params["link_setup_s"] * 1000 / 3600) * active[r]
                     for r in range(slots)))
-    # 方案二使用焦耳统一计量目标；上面的 Wh 近似仅保留给旧方案目标。
+    # 方案二的能耗上下界与目标使用焦耳，避免 Wh 舍入引入明显误差。
     energy_j = (
         sum(round(float(choice.option["energy_kwh"]) * 3_600_000) * selected[i]
             for i, choice in enumerate(pool))
@@ -2005,7 +2002,6 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
             model.Minimize(10000 * sum(weight * var for var, weight in late_vars) +
                            10 * makespan + transport_wh + relay_wh +
                            50 * sum(selected) + 100 * sum(active))
-<<<<<<< HEAD
         elif objective_mode == "equal_normalized":
             if objective_reference is None:
                 raise ValueError("等权目标必须提供已验收基线的四项指标")
@@ -2016,7 +2012,6 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                 coef["joint_makespan_s"] * makespan +
                 coef["total_energy_kwh"] * (transport_wh + relay_wh) +
                 coef["total_sorties"] * (sum(selected) + sum(active)))
-=======
         elif objective_mode == "scheme2_lateness":
             model.Minimize(weighted_late)
         elif objective_mode == "scheme2_makespan":
@@ -2027,7 +2022,6 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
             model.Minimize(sum(selected))
         elif objective_mode == "scheme2_relay_sorties":
             model.Minimize(sum(active))
->>>>>>> 5f2f7185d793316650042d4cd868b2c6cf3a90c1
         else:
             raise ValueError("不支持的目标函数模式")
     if hints:
