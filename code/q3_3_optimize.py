@@ -190,7 +190,7 @@ def _new_bundle(ctx: Context, routes: tuple[Any, ...], family: str,
 def _propose_routes(ctx: Context, current: list[base.JointChoice],
                     released: set[int], max_stops: int,
                     package_limit: int, deadline: float,
-                    rotation: int = 0) -> tuple[
+                    rotation: int = 0, priority: str = "sorties") -> tuple[
                         list[RouteBundle], dict[str, int]]:
     """按路线包生成，先去重再按四种用途分配认证预算。"""
     produced: list[RouteBundle] = []
@@ -310,7 +310,12 @@ def _propose_routes(ctx: Context, current: list[base.JointChoice],
     selected: list[RouteBundle] = []
     chosen: set[tuple[Any, ...]] = set()
     quota = max(1, package_limit // len(buckets))
-    for ranked in buckets.values():
+    if priority not in {"sorties", "makespan"}:
+        raise ValueError("候选路线优先级只能是 sorties 或 makespan")
+    bucket_order = (("parallel", "fast", "coverage", "energy", "few")
+                    if priority == "makespan" else tuple(buckets))
+    for bucket_name in bucket_order:
+        ranked = buckets[bucket_name]
         added = 0
         for bundle in ranked:
             if bundle.key in chosen:
@@ -323,7 +328,7 @@ def _propose_routes(ctx: Context, current: list[base.JointChoice],
         if len(selected) >= package_limit:
             break
     if len(selected) < package_limit:
-        for bundle in buckets["few"]:
+        for bundle in buckets["fast" if priority == "makespan" else "few"]:
             if bundle.key not in chosen:
                 selected.append(bundle)
                 chosen.add(bundle.key)
@@ -427,7 +432,8 @@ class GeometryPool:
 
 def _certify_packages(ctx: Context, bundles: list[RouteBundle],
                       geometry: GeometryPool, old: list[base.JointChoice],
-                      max_new_choices: int, deadline: float
+                      max_new_choices: int, deadline: float,
+                      priority: str = "sorties"
                       ) -> tuple[list[base.JointChoice], dict[str, int]]:
     """包内所有路线都能获至少一个机型时，才把该包加入活动池。"""
     accepted: list[base.JointChoice] = []
@@ -463,12 +469,20 @@ def _certify_packages(ctx: Context, bundles: list[RouteBundle],
         counts["complete"] += 1
         return True
 
+    if priority not in {"sorties", "makespan"}:
+        raise ValueError("候选认证优先级只能是 sorties 或 makespan")
+    family_rank = ({"split_1_to_2": 0, "move_boxes": 1,
+                    "swap_boxes": 2, "merge_3_to_2": 3,
+                    "merge_2_to_1": 4, "merge_3_to_1": 5}
+                   if priority == "makespan" else
+                   {"merge_3_to_1": 0, "merge_2_to_1": 0,
+                    "merge_3_to_2": 1, "split_1_to_2": 2,
+                    "move_boxes": 3, "swap_boxes": 4})
     ranked_bundles = sorted(
         bundles,
         key=lambda bundle: (
-            {"merge_3_to_1": 0, "merge_2_to_1": 0,
-             "merge_3_to_2": 1, "split_1_to_2": 2,
-             "move_boxes": 3, "swap_boxes": 4}.get(bundle.family, 5),
+            family_rank.get(bundle.family, 6),
+            -bundle.duration_gain if priority == "makespan" else
             -bundle.energy_gain))
     for number, bundle in enumerate(ranked_bundles, 1):
         if time.monotonic() >= deadline:
