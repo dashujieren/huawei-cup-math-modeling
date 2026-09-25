@@ -708,7 +708,8 @@ def _save_diagnostics(table_dir: Path, slices: list[TimeSlice],
 
 
 def _save_figures(figure_dir: Path, slices: list[TimeSlice],
-                  assigned: dict[int, str], missions: list[RelayMission]) -> None:
+                  assigned: dict[int, str], missions: list[RelayMission],
+                  scheme_label: str = "Q3 scheme 1") -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -727,7 +728,7 @@ def _save_figures(figure_dir: Path, slices: list[TimeSlice],
     ax.set_yticks(range(len(sortie_ids)), sortie_ids)
     ax.set_xlabel("Time since dispatch / s")
     ax.set_ylabel("Transport sortie")
-    ax.set_title("Q3 scheme 1: certified communication intervals")
+    ax.set_title(f"{scheme_label}: certified communication intervals")
     ax.legend(handles=[Patch(facecolor=colors[key], label=key)
                        for key in ("direct", "relay", "uncovered")], loc="upper right")
     ax.grid(axis="x", alpha=0.25)
@@ -1045,7 +1046,8 @@ def validate_official_tables(table_dir: Path, data_run: Path,
     }
 
 
-def _save_verification(table_dir: Path, validation: dict[str, Any]) -> None:
+def _save_verification(table_dir: Path, validation: dict[str, Any],
+                       scheme_check_id: str = "SCHEME1_STATUS") -> None:
     comm = validation["communication"]
     resource = validation["relay_resources"]
     interval_columns = ["sortie_id", "stage", "start_s", "end_s", "mode",
@@ -1062,7 +1064,7 @@ def _save_verification(table_dir: Path, validation: dict[str, Any]) -> None:
                "detail": (f"PASS={comm['certified_interval_count']}, "
                           f"FAIL={comm['failed_interval_count']}, "
                           f"UNVERIFIED={comm['unverified_interval_count']}")},
-               {"check_id": "SCHEME1_STATUS", "status": validation["status"],
+               {"check_id": scheme_check_id, "status": validation["status"],
                "detail": f"未覆盖诊断行={validation['diagnostic_uncovered_rows']}"}]
     write_rows(table_dir / "Q3_验收检查.csv", checks,
                ["check_id", "status", "detail"])
@@ -1546,6 +1548,7 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                  resource_available: dict[str, dict[str, int]] | None = None,
                  time_grid_s: int | None = None,
                  objective_mode: str = "balanced",
+                 metric_limits: Mapping[str, int] | None = None,
                  explicit_relay_uavs: bool = True,
                  search_seed: int = 20260923) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     try:
@@ -1917,6 +1920,29 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                 sum(service_wh_per_second * (service_ends[r] - readies[r]) +
                     round(relay_power_kw * params["link_setup_s"] * 1000 / 3600) * active[r]
                     for r in range(slots)))
+    # 方案二使用焦耳统一计量目标；上面的 Wh 近似仅保留给旧方案目标。
+    energy_j = (
+        sum(round(float(choice.option["energy_kwh"]) * 3_600_000) * selected[i]
+            for i, choice in enumerate(pool))
+        + sum(round(site.travel_energy_kwh * 3_600_000) * site_vars[r][j]
+              for r in range(slots) for j, site in enumerate(sites))
+        + sum(round(relay_power_kw * 1000) * (service_ends[r] - readies[r])
+              + round(relay_power_kw * params["link_setup_s"] * 1000) * active[r]
+              for r in range(slots)))
+    weighted_late = sum(weight * var for var, weight in late_vars)
+    for metric, upper in (metric_limits or {}).items():
+        if metric == "weighted_lateness":
+            model.Add(weighted_late <= upper)
+        elif metric == "makespan_s":
+            model.Add(makespan <= upper)
+        elif metric == "energy_j":
+            model.Add(energy_j <= upper)
+        elif metric == "transport_sorties":
+            model.Add(sum(selected) <= upper)
+        elif metric == "relay_sorties":
+            model.Add(sum(active) <= upper)
+        else:
+            raise ValueError(f"不支持的指标界限：{metric}")
     # 优先处理期望时刻的加权迟到，再兼顾返航、能耗和架次数。
     if not feasibility_only:
         if objective_mode == "sorties":
@@ -1929,6 +1955,16 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
             model.Minimize(10000 * sum(weight * var for var, weight in late_vars) +
                            10 * makespan + transport_wh + relay_wh +
                            50 * sum(selected) + 100 * sum(active))
+        elif objective_mode == "scheme2_lateness":
+            model.Minimize(weighted_late)
+        elif objective_mode == "scheme2_makespan":
+            model.Minimize(makespan)
+        elif objective_mode == "scheme2_energy":
+            model.Minimize(energy_j)
+        elif objective_mode == "scheme2_sorties":
+            model.Minimize(sum(selected))
+        elif objective_mode == "scheme2_relay_sorties":
+            model.Minimize(sum(active))
         else:
             raise ValueError("不支持的目标函数模式")
     if hints:
