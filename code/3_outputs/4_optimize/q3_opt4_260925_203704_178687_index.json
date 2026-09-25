@@ -1,0 +1,787 @@
+{
+  "status": "PASS",
+  "source_scheme3_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table",
+  "reference_metrics": {
+    "transport_sorties": 24,
+    "relay_sorties": 10,
+    "makespan_s": 12846.727665741508,
+    "energy_kwh": 75.10511214044642,
+    "weighted_lateness": 550194.0010686526
+  },
+  "representatives": [
+    {
+      "status": "PASS",
+      "method": "Q3 scheme 4: critical-chain guided joint transport-relay compression",
+      "source_scheme3_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table",
+      "source": {
+        "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+        "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+        "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+      },
+      "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+      "code_sha256": {
+        "q3_4_optimize.py": "415d22e0b91260c8a65502419af92b1d4ca1ba4112de3b64d1281dca0a3c0a60",
+        "q3_3_optimize.py": "c893e377f002ceac3d43dcc4935f8ea1c035efcdb96deb720751e72b41f56234",
+        "q3_2_optimize.py": "298d30aa88b52e178adff8775b27014cbe884ed2ad8ac47f8497f35885c0991c",
+        "q3_1_optimize.py": "721b7123119b67f410bd1c1a6e146c1751eb8c1b0b73cd5d3290d53045782d67",
+        "q2_1_optimize.py": "6dd36782f21659551c4601cbfeeee1f83b0cd9291a658324def1a9c1086f9c33"
+      },
+      "goal": "fast",
+      "stage": "rebatch",
+      "grade": "small",
+      "reference_metrics": {
+        "transport_sorties": 24,
+        "relay_sorties": 10,
+        "makespan_s": 12846.727665741508,
+        "energy_kwh": 75.10511214044642,
+        "weighted_lateness": 550194.0010686526
+      },
+      "final_metrics": {
+        "weighted_lateness": 309592.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 74.9651353070465,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "improved_makespan_from_source": true,
+      "hard_deadline_min_slack_s": 0.21780525668145856,
+      "transport_status": "PASS",
+      "communication_status": "PASS",
+      "relay_resource_status": "PASS",
+      "global_optimality_proven": false,
+      "candidate_site_count": 40,
+      "candidate_stats": {
+        "certified": 394,
+        "uncovered_routes": 7,
+        "new_sites": 20,
+        "site_budget_reached": 0,
+        "site_grid_exceeded": 0
+      },
+      "search_wall_s": 972.1719999999987,
+      "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_fast_table",
+      "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_fast_figure"
+    },
+    {
+      "status": "PASS",
+      "method": "Q3 scheme 4: critical-chain guided joint transport-relay compression",
+      "source_scheme3_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table",
+      "source": {
+        "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+        "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+        "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+      },
+      "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+      "code_sha256": {
+        "q3_4_optimize.py": "415d22e0b91260c8a65502419af92b1d4ca1ba4112de3b64d1281dca0a3c0a60",
+        "q3_3_optimize.py": "c893e377f002ceac3d43dcc4935f8ea1c035efcdb96deb720751e72b41f56234",
+        "q3_2_optimize.py": "298d30aa88b52e178adff8775b27014cbe884ed2ad8ac47f8497f35885c0991c",
+        "q3_1_optimize.py": "721b7123119b67f410bd1c1a6e146c1751eb8c1b0b73cd5d3290d53045782d67",
+        "q2_1_optimize.py": "6dd36782f21659551c4601cbfeeee1f83b0cd9291a658324def1a9c1086f9c33"
+      },
+      "goal": "energy",
+      "stage": "rebatch",
+      "grade": "strict",
+      "reference_metrics": {
+        "transport_sorties": 24,
+        "relay_sorties": 10,
+        "makespan_s": 12846.727665741508,
+        "energy_kwh": 75.10511214044642,
+        "weighted_lateness": 550194.0010686526
+      },
+      "final_metrics": {
+        "weighted_lateness": 364912.33068525326,
+        "makespan_s": 10358.727665741508,
+        "energy_kwh": 74.74786901631524,
+        "transport_sorties": 24,
+        "relay_sorties": 9
+      },
+      "improved_makespan_from_source": true,
+      "hard_deadline_min_slack_s": 0.21780525668145856,
+      "transport_status": "PASS",
+      "communication_status": "PASS",
+      "relay_resource_status": "PASS",
+      "global_optimality_proven": false,
+      "candidate_site_count": 40,
+      "candidate_stats": {
+        "certified": 394,
+        "uncovered_routes": 7,
+        "new_sites": 20,
+        "site_budget_reached": 0,
+        "site_grid_exceeded": 0
+      },
+      "search_wall_s": 972.1719999999987,
+      "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_energy_table",
+      "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_energy_figure"
+    },
+    {
+      "status": "PASS",
+      "method": "Q3 scheme 4: critical-chain guided joint transport-relay compression",
+      "source_scheme3_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table",
+      "source": {
+        "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+        "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+        "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+      },
+      "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+      "code_sha256": {
+        "q3_4_optimize.py": "415d22e0b91260c8a65502419af92b1d4ca1ba4112de3b64d1281dca0a3c0a60",
+        "q3_3_optimize.py": "c893e377f002ceac3d43dcc4935f8ea1c035efcdb96deb720751e72b41f56234",
+        "q3_2_optimize.py": "298d30aa88b52e178adff8775b27014cbe884ed2ad8ac47f8497f35885c0991c",
+        "q3_1_optimize.py": "721b7123119b67f410bd1c1a6e146c1751eb8c1b0b73cd5d3290d53045782d67",
+        "q2_1_optimize.py": "6dd36782f21659551c4601cbfeeee1f83b0cd9291a658324def1a9c1086f9c33"
+      },
+      "goal": "lateness",
+      "stage": "tradeoff",
+      "grade": "small",
+      "reference_metrics": {
+        "transport_sorties": 24,
+        "relay_sorties": 10,
+        "makespan_s": 12846.727665741508,
+        "energy_kwh": 75.10511214044642,
+        "weighted_lateness": 550194.0010686526
+      },
+      "final_metrics": {
+        "weighted_lateness": 279571.41049857385,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 75.17903395639279,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "improved_makespan_from_source": true,
+      "hard_deadline_min_slack_s": 122.49946670341706,
+      "transport_status": "PASS",
+      "communication_status": "PASS",
+      "relay_resource_status": "PASS",
+      "global_optimality_proven": false,
+      "candidate_site_count": 40,
+      "candidate_stats": {
+        "certified": 394,
+        "uncovered_routes": 7,
+        "new_sites": 20,
+        "site_budget_reached": 0,
+        "site_grid_exceeded": 0
+      },
+      "search_wall_s": 972.1719999999987,
+      "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_lateness_table",
+      "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_lateness_figure"
+    }
+  ],
+  "stage_comparison": [
+    {
+      "stage": "S0",
+      "status": "PASS",
+      "metrics": {
+        "transport_sorties": 24,
+        "relay_sorties": 10,
+        "makespan_s": 12846.727665741508,
+        "energy_kwh": 75.10511214044642,
+        "weighted_lateness": 550194.0010686526
+      },
+      "table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table"
+    },
+    {
+      "stage": "time_shift_diagnostic",
+      "status": "UNVALIDATED_HINT_ONLY",
+      "nodes": 34,
+      "edges": 92,
+      "earliest_fixed_structure_c_s": 12383.021886583927,
+      "original_c_s": 12846.727665742,
+      "maximum_original_residual_s": 0.0,
+      "task_starts": [
+        {
+          "任务": "R001",
+          "原开始秒": 55.577675532,
+          "前移提示秒": 54.844573890294214,
+          "可前移秒": 0.7331016417057867
+        },
+        {
+          "任务": "R002",
+          "原开始秒": 101.595297664,
+          "前移提示秒": 100.88725051063489,
+          "可前移秒": 0.7080471533651149
+        },
+        {
+          "任务": "R003",
+          "原开始秒": 2152.123774678,
+          "前移提示秒": 2150.9485812952944,
+          "可前移秒": 1.1751933827054017
+        },
+        {
+          "任务": "R004",
+          "原开始秒": 2592.16479133,
+          "前移提示秒": 2589.112188198996,
+          "可前移秒": 3.052603131003707
+        },
+        {
+          "任务": "R005",
+          "原开始秒": 4184.689497747,
+          "前移提示秒": 4182.196437518294,
+          "可前移秒": 2.493060228705872
+        },
+        {
+          "任务": "R006",
+          "原开始秒": 6010.601231418,
+          "前移提示秒": 6001.675062610996,
+          "可前移秒": 8.926168807003705
+        },
+        {
+          "任务": "R007",
+          "原开始秒": 6010.790404553,
+          "前移提示秒": 5981.873912530951,
+          "可前移秒": 28.91649202204917
+        },
+        {
+          "任务": "R008",
+          "原开始秒": 8416.577675532,
+          "前移提示秒": 8307.35643095995,
+          "可前移秒": 109.22124457205064
+        },
+        {
+          "任务": "R009",
+          "原开始秒": 10616.669353132,
+          "前移提示秒": 10505.46043836495,
+          "可前移秒": 111.20891476705037
+        },
+        {
+          "任务": "R010",
+          "原开始秒": 10615.16479133,
+          "前移提示秒": 9959.687614931996,
+          "可前移秒": 655.4771763980043
+        },
+        {
+          "任务": "T001",
+          "原开始秒": 0.0,
+          "前移提示秒": 0.0,
+          "可前移秒": 0.0
+        },
+        {
+          "任务": "T002",
+          "原开始秒": 0.0,
+          "前移提示秒": 0.0,
+          "可前移秒": 0.0
+        },
+        {
+          "任务": "T003",
+          "原开始秒": 0.0,
+          "前移提示秒": 0.0,
+          "可前移秒": 0.0
+        },
+        {
+          "任务": "T004",
+          "原开始秒": 0.0,
+          "前移提示秒": 0.0,
+          "可前移秒": 0.0
+        },
+        {
+          "任务": "T005",
+          "原开始秒": 0.0,
+          "前移提示秒": 0.0,
+          "可前移秒": 0.0
+        },
+        {
+          "任务": "T006",
+          "原开始秒": 0.0,
+          "前移提示秒": 0.0,
+          "可前移秒": 0.0
+        },
+        {
+          "任务": "T007",
+          "原开始秒": 1757.0,
+          "前移提示秒": 1756.693933922209,
+          "可前移秒": 0.3060660777910016
+        },
+        {
+          "任务": "T008",
+          "原开始秒": 1944.0,
+          "前移提示秒": 1941.8976950670158,
+          "可前移秒": 2.102304932984225
+        },
+        {
+          "任务": "T009",
+          "原开始秒": 2027.0,
+          "前移提示秒": 2025.0165809090313,
+          "可前移秒": 1.9834190909687095
+        },
+        {
+          "任务": "T010",
+          "原开始秒": 2030.0,
+          "前移提示秒": 2028.491136562111,
+          "可前移秒": 1.5088634378889765
+        },
+        {
+          "任务": "T011",
+          "原开始秒": 2534.0,
+          "前移提示秒": 2530.2360720903675,
+          "可前移秒": 3.763927909632457
+        },
+        {
+          "任务": "T012",
+          "原开始秒": 2914.0,
+          "前移提示秒": 2911.470988522786,
+          "可前移秒": 2.529011477214226
+        },
+        {
+          "任务": "T013",
+          "原开始秒": 3633.0,
+          "前移提示秒": 3631.1968842234883,
+          "可前移秒": 1.8031157765117314
+        },
+        {
+          "任务": "T014",
+          "原开始秒": 3846.0,
+          "前移提示秒": 3843.4638755238557,
+          "可前移秒": 2.536124476144323
+        },
+        {
+          "任务": "T015",
+          "原开始秒": 3952.0,
+          "前移提示秒": 3840.177403322743,
+          "可前移秒": 111.82259667725702
+        },
+        {
+          "任务": "T016",
+          "原开始秒": 5737.0,
+          "前移提示秒": 5708.700522857693,
+          "可前移秒": 28.299477142307296
+        },
+        {
+          "任务": "T017",
+          "原开始秒": 5829.0,
+          "前移提示秒": 5800.336357345976,
+          "可前移秒": 28.663642654024443
+        },
+        {
+          "任务": "T018",
+          "原开始秒": 5890.0,
+          "前移提示秒": 5860.326870489081,
+          "可前移秒": 29.673129510919352
+        },
+        {
+          "任务": "T019",
+          "原开始秒": 5920.0,
+          "前移提示秒": 5890.326870489081,
+          "可前移秒": 29.673129510919352
+        },
+        {
+          "任务": "T020",
+          "原开始秒": 7822.0,
+          "前移提示秒": 7792.169177656598,
+          "可前移秒": 29.83082234340236
+        },
+        {
+          "任务": "T021",
+          "原开始秒": 8130.0,
+          "前移提示秒": 8020.5342837472035,
+          "可前移秒": 109.46571625279648
+        },
+        {
+          "任务": "T022",
+          "原开始秒": 8289.0,
+          "前移提示秒": 8179.327847599598,
+          "可前移秒": 109.67215240040241
+        },
+        {
+          "任务": "T023",
+          "原开始秒": 10385.0,
+          "前移提示秒": 9729.085807470788,
+          "可前移秒": 655.9141925292115
+        },
+        {
+          "任务": "T024",
+          "原开始秒": 10439.0,
+          "前移提示秒": 10326.986517554067,
+          "可前移秒": 112.01348244593282
+        }
+      ]
+    },
+    {
+      "stage": "fixed_used",
+      "goal": "fast",
+      "grade": "strict",
+      "status": "OPTIMAL",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 518683.28612694744,
+        "makespan_s": 12391.727665741508,
+        "energy_kwh": 75.10511214044642,
+        "transport_sorties": 24,
+        "relay_sorties": 10
+      },
+      "best_bound": 12392.0,
+      "hard_margin_s": 0.0,
+      "route_options": 24,
+      "site_count": 8
+    },
+    {
+      "stage": "fixed_all",
+      "goal": "fast",
+      "grade": "strict",
+      "status": "OPTIMAL",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 508358.99573568674,
+        "makespan_s": 12354.03536902986,
+        "energy_kwh": 75.0994406745246,
+        "transport_sorties": 24,
+        "relay_sorties": 10
+      },
+      "best_bound": 12355.0,
+      "hard_margin_s": 0.0,
+      "route_options": 24,
+      "site_count": 20
+    },
+    {
+      "stage": "sites",
+      "goal": "fast",
+      "grade": "strict",
+      "status": "OPTIMAL",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 508358.99573568674,
+        "makespan_s": 12354.03536902986,
+        "energy_kwh": 75.0994406745246,
+        "transport_sorties": 24,
+        "relay_sorties": 10
+      },
+      "best_bound": 12355.0,
+      "hard_margin_s": 0.0,
+      "route_options": 24,
+      "site_count": 36
+    },
+    {
+      "stage": "rebatch_candidates_1",
+      "released": 12,
+      "generated": {
+        "physical_or_deadline": 1443,
+        "duplicate": 134,
+        "generated": 3584,
+        "budget_truncated": 1981
+      },
+      "certified": {
+        "packages": 26,
+        "complete": 26,
+        "coverage_rejected": 0,
+        "choice_budget": 0,
+        "new_choices": 62
+      },
+      "type_alternatives": 11,
+      "pool_size": 92
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "strict",
+      "status": "OPTIMAL",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 364912.33068525326,
+        "makespan_s": 10358.727665741508,
+        "energy_kwh": 74.74786901631524,
+        "transport_sorties": 24,
+        "relay_sorties": 9
+      },
+      "best_bound": 10359.0,
+      "hard_margin_s": 0.0,
+      "route_options": 92,
+      "site_count": 36
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "extended",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 364912.33068525326,
+        "makespan_s": 10358.727665741508,
+        "energy_kwh": 74.74786901631524,
+        "transport_sorties": 24,
+        "relay_sorties": 9
+      },
+      "best_bound": 9249.0,
+      "hard_margin_s": 0.0,
+      "route_options": 24,
+      "site_count": 36
+    },
+    {
+      "stage": "rebatch_candidates_2",
+      "released": 12,
+      "generated": {
+        "physical_or_deadline": 10758,
+        "duplicate": 106,
+        "generated": 12213,
+        "budget_truncated": 1323
+      },
+      "certified": {
+        "packages": 26,
+        "complete": 20,
+        "coverage_rejected": 0,
+        "choice_budget": 6,
+        "new_choices": 70
+      },
+      "type_alternatives": 7,
+      "pool_size": 98
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "small",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 309802.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 75.0207464181576,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 6856.0,
+      "hard_margin_s": 0.0,
+      "route_options": 98,
+      "site_count": 40
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "extended",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 309802.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 75.0207464181576,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 8614.0,
+      "hard_margin_s": 0.0,
+      "route_options": 26,
+      "site_count": 40
+    },
+    {
+      "stage": "rebatch_candidates_3",
+      "released": 12,
+      "generated": {
+        "physical_or_deadline": 3231,
+        "duplicate": 52,
+        "generated": 4186,
+        "budget_truncated": 877
+      },
+      "certified": {
+        "packages": 26,
+        "complete": 26,
+        "coverage_rejected": 0,
+        "choice_budget": 0,
+        "new_choices": 69
+      },
+      "type_alternatives": 8,
+      "pool_size": 101
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "extended",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 309802.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 74.97155197371316,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 6220.0,
+      "hard_margin_s": 0.0,
+      "route_options": 101,
+      "site_count": 40
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "extended",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 309802.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 74.97155197371316,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 8614.0,
+      "hard_margin_s": 0.0,
+      "route_options": 26,
+      "site_count": 40
+    },
+    {
+      "stage": "rebatch_candidates_4",
+      "released": 12,
+      "generated": {
+        "physical_or_deadline": 2338,
+        "duplicate": 53,
+        "generated": 4246,
+        "budget_truncated": 1829
+      },
+      "certified": {
+        "packages": 26,
+        "complete": 23,
+        "coverage_rejected": 0,
+        "choice_budget": 3,
+        "new_choices": 69
+      },
+      "type_alternatives": 8,
+      "pool_size": 103
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "strict",
+      "status": "INFEASIBLE",
+      "validation": "NO_SOLUTION",
+      "within_actual_caps": null,
+      "metrics": null,
+      "best_bound": null,
+      "hard_margin_s": 0.0,
+      "route_options": 103,
+      "site_count": 40
+    },
+    {
+      "stage": "rebatch_candidates_5",
+      "released": 12,
+      "generated": {
+        "physical_or_deadline": 4801,
+        "duplicate": 45,
+        "generated": 7481,
+        "budget_truncated": 2609
+      },
+      "certified": {
+        "packages": 26,
+        "complete": 24,
+        "coverage_rejected": 0,
+        "choice_budget": 2,
+        "new_choices": 69
+      },
+      "type_alternatives": 8,
+      "pool_size": 103
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "small",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 309592.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 74.9651353070465,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 6643.0,
+      "hard_margin_s": 0.0,
+      "route_options": 103,
+      "site_count": 40
+    },
+    {
+      "stage": "rebatch",
+      "goal": "fast",
+      "grade": "extended",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 309592.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 74.9651353070465,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 8614.0,
+      "hard_margin_s": 0.0,
+      "route_options": 26,
+      "site_count": 40
+    },
+    {
+      "stage": "tradeoff",
+      "goal": "energy",
+      "grade": "strict",
+      "status": "INFEASIBLE",
+      "validation": "NO_SOLUTION",
+      "within_actual_caps": null,
+      "metrics": null,
+      "best_bound": null,
+      "hard_margin_s": 0.0,
+      "route_options": 26,
+      "site_count": 40
+    },
+    {
+      "stage": "tradeoff",
+      "goal": "lateness",
+      "grade": "small",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 279571.41049857385,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 75.17903395639279,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 8304.0,
+      "hard_margin_s": 0.0,
+      "route_options": 26,
+      "site_count": 40
+    },
+    {
+      "stage": "tradeoff",
+      "goal": "fast",
+      "grade": "extended",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 309232.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 74.97430197371315,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 8614.0,
+      "hard_margin_s": 30.0,
+      "route_options": 26,
+      "site_count": 40
+    },
+    {
+      "stage": "tradeoff",
+      "goal": "fast",
+      "grade": "extended",
+      "status": "FEASIBLE",
+      "validation": "PASS",
+      "within_actual_caps": true,
+      "metrics": {
+        "weighted_lateness": 305752.9619048942,
+        "makespan_s": 10124.681682937198,
+        "energy_kwh": 75.05252419593538,
+        "transport_sorties": 26,
+        "relay_sorties": 9
+      },
+      "best_bound": 8614.0,
+      "hard_margin_s": 60.0,
+      "route_options": 26,
+      "site_count": 40
+    }
+  ],
+  "search_wall_s": 972.1719999999987,
+  "global_optimality_proven": false
+}
