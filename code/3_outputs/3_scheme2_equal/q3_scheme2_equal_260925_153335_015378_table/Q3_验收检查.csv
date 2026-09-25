@@ -1,5 +1,0 @@
-﻿check_id,status,detail
-Q3_TRANSPORT,PASS,80 箱、运输轨迹、硬截止及机/电池资源复核通过
-RELAY_RESOURCE,PASS,中继物理与资源独立复核
-COMM_CONTINUOUS,PASS,"PASS=2108, FAIL=0, UNVERIFIED=0"
-SCHEME2_EQUAL_STATUS,PASS,未覆盖诊断行=0
