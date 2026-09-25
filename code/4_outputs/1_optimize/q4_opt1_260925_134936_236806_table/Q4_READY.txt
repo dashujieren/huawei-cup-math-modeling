@@ -1,0 +1,1 @@
+Q4 scheme 1 PASS: frozen Q3 scheme 1; all 2/3-group partitions and resource timelines checked
