@@ -1,0 +1,23 @@
+{
+  "pdf": "D:\\Documents\\ChatGPT\\研究生数学建模比赛\\D题\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_paper_figure\\Q3_四指标相对方案二对比.pdf",
+  "auditable": true,
+  "verdict": "PASS",
+  "page_count": 1,
+  "visible_text_box_count": 21,
+  "text_trace_count": 27,
+  "stroke_path_count": 13,
+  "filled_region_count": 22,
+  "image_region_count": 0,
+  "summary": {
+    "fail": 0,
+    "warn": 0,
+    "contained_fill_overlays": 8,
+    "contained_image_overlays": 0
+  },
+  "thresholds": {
+    "text_inset_pt": 0.6,
+    "min_overlap_ratio": 0.05,
+    "clipping_tolerance_pt": 0.5
+  },
+  "findings": []
+}
