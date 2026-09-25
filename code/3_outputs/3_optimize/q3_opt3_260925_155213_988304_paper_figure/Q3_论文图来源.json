@@ -1,0 +1,24 @@
+{
+  "status": "FIGURES_FROM_RECORDED_PASS_RESULTS",
+  "claim": "方案三两种代表解相对方案二在四项指标上的变化及内部权衡",
+  "normalization": "方案二逐指标=100%；只为展示，不表示方案三的搜索权重",
+  "source_csv": "3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table\\Q3_方案比较.csv",
+  "source_record": {
+    "run_id": "q3_opt3_260925_155213_988304",
+    "comparison_csv_sha256": "79a019e77b6c087833ec5548d8eae87b585900ed3bffcbd684faedd225597c58",
+    "index_sha256": "639f9021d48e15663c5e5f777be7737739a42c0eda96eb2106d681be5f238d85",
+    "representative_checks": {
+      "sorties": "Q3_TRANSPORT,RELAY_RESOURCE,COMM_CONTINUOUS,SCHEME3_STATUS",
+      "lateness": "Q3_TRANSPORT,RELAY_RESOURCE,COMM_CONTINUOUS,SCHEME3_STATUS"
+    },
+    "q3_1_recorded_sha256": "a58e6e10d39e746d9347a5f544639ff3734dd79af74f48501695c0cd585affc2",
+    "q3_1_current_sha256": "9fa017f8eef90e0bf0aafd62bc9a98db93e9e17f731af7fb0e3d11e5aeb41712",
+    "q3_1_matches_recorded": false,
+    "global_optimality_proven": false
+  },
+  "figure_archetype": "quantitative grid (two separate single-panel figures)",
+  "backend": "Python/matplotlib",
+  "exclusion": "四指标图不画方案一，因其问题是方案二与方案三两代表解的直接比较；散点图保留全部四行。",
+  "statistics": "确定性求解结果；非重复样本，无误差条或显著性检验。",
+  "note": "图可由保存的 CSV 复现；求解器源码指纹不一致时，不可声称完整求解已复现。"
+}
