@@ -1,0 +1,71 @@
+{
+  "status": "PASS",
+  "method": "complementary relay sites; hard-deadline joint CP-SAT; grouped soft-delivery insertion; independent continuous verification",
+  "interpretation": "分层候选方案已导出并独立复核；未证明全局最优",
+  "source": {
+    "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+    "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+    "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+  },
+  "candidate_stats": {
+    "backhaul": 529,
+    "grid_points": 320,
+    "candidate_count": 1711
+  },
+  "shortlisted_relay_sites": 20,
+  "attempts": [
+    {
+      "stage": "hard_joint",
+      "result": {
+        "stage": "hard",
+        "solver_status": "OPTIMAL",
+        "route_options": 45,
+        "relay_sites": 20,
+        "relay_slots": 10,
+        "boxes": 31,
+        "wall_time_s": 11.3671483,
+        "branches": 266957,
+        "conflicts": 33858,
+        "time_limit_s": 120.0,
+        "selected_transport_sorties": 15,
+        "selected_relay_sorties": 7
+      }
+    },
+    {
+      "stage": "all_boxes_joint",
+      "result": {
+        "stage": "full",
+        "solver_status": "OPTIMAL",
+        "route_options": 45,
+        "relay_sites": 20,
+        "relay_slots": 18,
+        "boxes": 80,
+        "wall_time_s": 8.880188200000001,
+        "branches": 139220,
+        "conflicts": 42335,
+        "time_limit_s": 120.0,
+        "selected_transport_sorties": 31,
+        "selected_relay_sorties": 13
+      }
+    }
+  ],
+  "attempt_count": 2,
+  "global_optimality_proven": false,
+  "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\1_optimize\\q3_opt1_260925_103405_053686_table",
+  "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\1_optimize\\q3_opt1_260925_103405_053686_figure",
+  "candidate_pool_optimality_proven": false,
+  "relay_solver_status": "OPTIMAL",
+  "transport_sorties": 31,
+  "relay_sorties": 13,
+  "delivered_boxes": 80,
+  "transport_last_return_s": 23094.170391878757,
+  "relay_last_return_s": 22048.371630900772,
+  "joint_makespan_s": 23094.170391878757,
+  "transport_energy_kwh": 87.73502362859051,
+  "relay_energy_kwh": 11.40618536165136,
+  "soft_weighted_lateness_s": 2908010.1196355224,
+  "communication_status": "PASS",
+  "transport_status": "PASS",
+  "relay_resource_status": "PASS",
+  "total_energy_kwh": 99.14120899024186
+}

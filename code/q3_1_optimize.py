@@ -1,7 +1,9 @@
-"""问题三方案 1：从 80 箱原始数据联合安排运输与通信中继。
+"""问题三方案 1：互补中继选点与硬时限优先的运输—通信联合排程。
 
-候选组批可按通信及资源冲突动态拆分；运输与中继使用区间日历并行排程。
-有限候选和搜索预算不证明最优；只有独立复核全部通过才写 Q3_READY.txt。
+从原始 80 箱组批，先联合安排硬时限货物和中继，再插入其余整批货物。
+全程考虑 8 架运输机、14 组电池、2 架中继机及 6 组能源组件的周转。
+站点筛选保留两站互补覆盖；通信分段保留站点切换边界。
+有限路线/站点与时间预算不证明全局最优；独立复核通过才写 Q3_READY.txt。
 """
 
 from __future__ import annotations
@@ -11,11 +13,14 @@ import csv
 import hashlib
 import json
 import math
+import sys
+import tempfile
+import threading
+import time
 from collections import defaultdict
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from pathlib import Path
-from time import perf_counter
 from typing import Any, Iterable, Mapping
 
 import numpy as np
@@ -32,6 +37,67 @@ from q2_1_optimize import Context, check_plan
 CODE_DIR = Path(__file__).resolve().parent
 EXPECTED_MANIFEST = "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e"
 EPS = 1e-7
+
+
+class ProgressBar:
+    """显示可计数任务的真实完成量；搜索器另显示已用时间预算。"""
+
+    def __init__(self, label: str, total: float):
+        self.label = label
+        self.total = max(float(total), 1.0)
+        self.tty = sys.stdout.isatty()
+        self.last_print = 0.0
+        self.last_bucket = -1
+        self.current = 0.0
+        self.update(0, force=True)
+
+    def update(self, done: float, *, force: bool = False) -> None:
+        self.current = max(0.0, min(float(done), self.total))
+        now = time.monotonic()
+        ratio = self.current / self.total
+        bucket = min(10, int(ratio * 10))
+        if not force and self.current < self.total:
+            if self.tty and now - self.last_print < 0.5:
+                return
+            if not self.tty and bucket <= self.last_bucket and now - self.last_print < 10:
+                return
+        filled = int(ratio * 24)
+        message = (f"Q3 [{self.label}] [{'#' * filled}{'.' * (24 - filled)}] "
+                   f"{ratio:5.0%} ({self.current:.0f}/{self.total:.0f})")
+        print(("\r" if self.tty else "") + message,
+              end="" if self.tty else "\n", flush=True)
+        self.last_print, self.last_bucket = now, bucket
+
+    def close(self, *, completed: bool = True) -> None:
+        if completed or self.tty:
+            self.update(self.total if completed else self.current, force=True)
+        if self.tty:
+            print(flush=True)
+
+
+class SolverBudgetBar:
+    """CP-SAT 无可信的解空间百分比，因此只展示已用墙钟预算。"""
+
+    def __init__(self, label: str, seconds: float):
+        self.bar = ProgressBar(f"{label}：时间预算", seconds)
+        self.started = time.monotonic()
+        self.stopped = threading.Event()
+        self.thread = threading.Thread(target=self._refresh, daemon=True)
+
+    def _refresh(self) -> None:
+        while not self.stopped.wait(0.5):
+            self.bar.update(time.monotonic() - self.started)
+
+    def __enter__(self) -> "SolverBudgetBar":
+        self.thread.start()
+        return self
+
+    def __exit__(self, _type: Any, _value: Any, _traceback: Any) -> None:
+        self.stopped.set()
+        self.thread.join()
+        self.bar.update(time.monotonic() - self.started, force=True)
+        if self.bar.tty:
+            print(flush=True)
 
 TRANSPORT_COLUMNS = [
     "架次编号", "无人机编号", "机型编号", "电池编号", "开始时刻（s）",
@@ -459,7 +525,9 @@ def generate_candidates(dem: DemGrid, links: LinkEvaluator,
     counts: dict[str, int] = defaultdict(int)
     center = home
     service_power = params["hover_power_kw"] + params["comm_extra_power_kw"]
-    for x, y in xy_points:
+    progress = ProgressBar("物理站点认证", len(xy_points))
+    for number, (x, y) in enumerate(xy_points, 1):
+        progress.update(number - 1)
         try:
             ground = dem.terrain_at(x, y)
         except ValueError:
@@ -506,6 +574,7 @@ def generate_candidates(dem: DemGrid, links: LinkEvaluator,
                 float(agl), outward_s, homeward_s, travel_energy,
                 max_service, backhaul.margin_db,
             ))
+    progress.close()
     counts["grid_points"] = len(xy_points)
     counts["candidate_count"] = len(candidates)
     return candidates, dict(counts)
@@ -1144,23 +1213,6 @@ def _raw_route_sets(ctx: Context) -> list[tuple[str, list[RouteTask]]]:
     return route_sets
 
 
-def _task_order(ctx: Context, tasks: list[RouteTask], mode: str) -> list[RouteTask]:
-    def key(task: RouteTask) -> tuple[float, float, float, str]:
-        options = ctx.options(task.route)
-        latest = max(_latest_hard_start(ctx, task.route, option)
-                     for option in options.values())
-        expected = min(float(ctx.boxes[bid]["expected_s"]) -
-                       float(option["completion_offsets"][bid])
-                       for option in options.values() for bid in task.route.box_ids)
-        urgency = (latest if mode == "hard_slack" else
-                   min((float(ctx.boxes[bid]["hard_deadline_s"])
-                        for bid in task.route.box_ids
-                        if not pd.isna(ctx.boxes[bid]["hard_deadline_s"])),
-                       default=math.inf))
-        return urgency, expected, -len(task.route.box_ids), task.batch_id
-    return sorted(tasks, key=key)
-
-
 def _source_slices_from_raw(ctx: Context, positions: dict[str, tuple[float, float, float]],
                             links: LinkEvaluator, step_s: float,
                             route_sets: list[tuple[str, list[RouteTask]]]) -> list[TimeSlice]:
@@ -1168,47 +1220,38 @@ def _source_slices_from_raw(ctx: Context, positions: dict[str, tuple[float, floa
     by_zone: dict[str, list[str]] = defaultdict(list)
     for box_id, box in ctx.boxes.items():
         by_zone[str(box["zone_id"])].append(box_id)
+    paired = next((tasks for name, tasks in route_sets
+                   if name == "neighbor_pair"), [])
+    total = len(by_zone) * len(ctx.models) + sum(
+        len(ctx.options(task.route)) for task in paired if len(task.route.zones) >= 2)
+    progress = ProgressBar("源路线通信分段", total)
+    completed = 0
     slices: list[TimeSlice] = []
     for zone, ids in sorted(by_zone.items()):
         for kind in sorted(ctx.models):
+            progress.update(completed)
             feasible = next((ctx.route([(zone, [bid])]) for bid in ids
                              if kind in ctx.options(ctx.route([(zone, [bid])]))), None)
+            completed += 1
             if feasible is None:
                 continue
             option = ctx.options(feasible)[kind]
             segments = _relative_trajectory(ctx, feasible, option, positions)
             slices.extend(_certified_slices(f"SRC_{zone}_{kind}", segments,
                                             links, step_s))
-    paired = next((tasks for name, tasks in route_sets
-                   if name == "neighbor_pair"), [])
     for task in paired:
         if len(task.route.zones) < 2:
             continue
         for kind, option in ctx.options(task.route).items():
+            progress.update(completed)
+            completed += 1
             segments = _relative_trajectory(ctx, task.route, option, positions)
             slices.extend(_certified_slices(
                 f"SRC_{task.batch_id}_{kind}", segments, links, step_s))
+    progress.close()
     if not slices:
         raise ValueError("原始货箱未形成可计算的运输走廊")
     return slices
-
-
-def _state_score(state: JointState) -> tuple[float, float, int, float]:
-    delay = sum(d["priority"] * d["soft_lateness_s"] for d in state.deliveries
-                if d["hard_deadline_s"] is None)
-    last = max([row["return_s"] for row in state.sorties] +
-               [mission.return_s for mission in state.missions], default=0.0)
-    energy = sum(row["energy_kwh"] for row in state.sorties) + sum(
-        mission.energy_kwh for mission in state.missions)
-    return delay, last, len(state.missions), energy
-
-
-
-
-
-
-
-
 
 
 def _route_profile(ctx: Context, task: RouteTask, kind: str,
@@ -1252,550 +1295,1027 @@ def _route_profile(ctx: Context, task: RouteTask, kind: str,
     return RouteProfile(segments, slices, ranked, support, uncovered)
 
 
-def _intersects(a0: float, a1: float, b0: float, b1: float) -> bool:
-    return a0 < b1 - EPS and b0 < a1 - EPS
+@dataclass(frozen=True)
+class BlindBlock:
+    begin_s: float
+    end_s: float
+    sites: frozenset[int]
+    slice_ids: tuple[int, ...]
 
 
-def _transport_slot(state: JointState, uav_id: str, battery_id: str,
-                    earliest: float, duration: float, charge: float) -> float:
-    """按资源占用区间找空档；无需沿用其他架次的全局起飞顺序。"""
-    start = max(0.0, earliest)
-    for _ in range(2 * len(state.sorties) + 4):
-        blocking = []
-        for old in state.sorties:
-            if old["uav_id"] == uav_id and _intersects(
-                    start, start + duration, old["start_s"], old["return_s"]):
-                blocking.append(old["return_s"])
-            if old["battery_id"] == battery_id and _intersects(
-                    start, start + duration + charge,
-                    old["start_s"], old["charge_end_s"]):
-                blocking.append(old["charge_end_s"])
-        if not blocking:
-            return start
-        start = max(blocking)
-    raise RuntimeError("运输资源空档查找未收敛")
+@dataclass
+class JointChoice:
+    task: RouteTask
+    kind: str
+    option: dict[str, Any]
+    profile: RouteProfile
+    blocks: list[BlindBlock]
 
 
-def _relay_slot_shift(missions: list[RelayMission], uav_id: str, unit_id: str,
-                      start: float, returned: float, energy: float,
-                      relay: dict[str, Any]) -> float:
-    params = relay["params"]
-    soc = 1.0 - energy / params["energy_use_kwh"]
-    uav_end = returned + params["turnaround_s"]
-    unit_end = returned + charge_to_full_s(soc, params["full_charge_s"])
-    shifts = []
-    for old in missions:
-        if old.uav_id == uav_id and _intersects(
-                start, uav_end, old.start_s,
-                old.return_s + params["turnaround_s"]):
-            shifts.append(old.return_s + params["turnaround_s"] - start)
-        if old.unit_id == unit_id:
-            old_soc = 1.0 - old.energy_kwh / params["energy_use_kwh"]
-            old_end = old.return_s + charge_to_full_s(old_soc, params["full_charge_s"])
-            if _intersects(start, unit_end, old.start_s, old_end):
-                shifts.append(old_end - start)
-    return max(shifts, default=0.0)
-
-
-def _relay_options_fast(state: JointState, profile: RouteProfile,
-                        shifted_slices: list[TimeSlice],
-                        candidates: list[RelayCandidate], links: LinkEvaluator,
-                        relay: dict[str, Any], candidate_limit: int,
-                        access_cache: dict[tuple[Any, ...], bool],
-                        limit: int = 4
-                        ) -> tuple[list[tuple[list[RelayMission], dict[int, str]]],
-                                   float | None, dict[str, int]]:
-    """只遍历预先证明可覆盖的点；时间平移不会改变空间链路。"""
-    blind = [(item, local_id) for local_id, item in enumerate(shifted_slices)
-             if not item.direct_available]
-    variants = [(list(state.missions), dict(state.assigned))]
-    params = relay["params"]
-    power = params["hover_power_kw"] + params["comm_extra_power_kw"]
-    reasons: dict[str, int] = defaultdict(int)
-    suggested: float | None = None
-    for place, (first, local_id) in enumerate(blind):
-        expanded = []
-        for missions, assigned in variants:
-            if first.slice_id in assigned:
-                expanded.append((missions, assigned))
-                continue
-            shared = next((mission for mission in missions
-                           if mission.ready_s <= first.start_s + EPS and
-                           first.end_s <= mission.service_end_s + EPS and
-                           _access_certified(mission.candidate, first,
-                                             links, access_cache)), None)
-            if shared is not None:
-                copied = dict(assigned)
-                copied[first.slice_id] = shared.mission_id
-                expanded.append((missions, copied))
-                continue
-            # 后续运输任务可以沿用已经起飞的中继，并把原服务窗口延长。
-            # 延长后重新核算悬停能耗、返航时刻以及机体/组件日历。
-            for previous in missions:
-                if not (previous.ready_s <= first.start_s + EPS and
-                        previous.service_end_s < first.end_s - EPS):
-                    continue
-                if not _access_certified(previous.candidate, first,
-                                         links, access_cache):
-                    continue
-                new_end = first.end_s
-                if new_end - previous.ready_s > previous.candidate.max_service_s + EPS:
-                    reasons["relay_service_limit"] += 1
-                    continue
-                new_energy = (previous.candidate.travel_energy_kwh + power *
-                              (params["link_setup_s"] +
-                               new_end - previous.ready_s) / 3600.0)
-                if new_energy > ((1.0 - params["return_soc_min"]) *
-                                 params["energy_use_kwh"] + EPS):
-                    reasons["relay_energy_limit"] += 1
-                    continue
-                new_return = new_end + previous.candidate.homeward_s
-                others = [item for item in missions
-                          if item.mission_id != previous.mission_id]
-                if _relay_slot_shift(others, previous.uav_id,
-                                     previous.unit_id, previous.start_s,
-                                     new_return, new_energy, relay) > EPS:
-                    reasons["relay_resource_calendar"] += 1
-                    continue
-                extended = replace(previous, service_end_s=new_end,
-                                   return_s=new_return, energy_kwh=new_energy)
-                copied = dict(assigned)
-                copied[first.slice_id] = previous.mission_id
-                expanded.append(([
-                    extended if item.mission_id == previous.mission_id else item
-                    for item in missions], copied))
-            ranked = profile.ranked_sites.get(local_id, ())
-            if not ranked:
-                reasons["no_spatial_relay_site"] += 1
-                continue
-            choices = []
-            for site_index in ranked[:candidate_limit]:
-                candidate = candidates[site_index]
-                upper = first.start_s + candidate.max_service_s
-                if first.end_s > upper + EPS:
-                    reasons["relay_service_limit"] += 1
-                    continue
-                included = [first]
-                for later, later_local in blind[place + 1:]:
-                    if later.slice_id in assigned:
-                        continue
-                    if (later.end_s > upper + EPS or
-                            site_index not in profile.support.get(later_local, set())):
-                        break
-                    included.append(later)
-                end = included[-1].end_s
-                energy = candidate.travel_energy_kwh + power * (
-                    params["link_setup_s"] + end - first.start_s) / 3600.0
-                if energy > (1.0 - params["return_soc_min"]) * params["energy_use_kwh"] + EPS:
-                    reasons["relay_energy_limit"] += 1
-                    continue
-                launch = first.start_s - (params["prep_s"] + candidate.outward_s +
-                                          params["link_setup_s"])
-                if launch < -EPS:
-                    wait = -launch
-                    suggested = wait if suggested is None else min(suggested, wait)
-                    reasons["relay_needs_earlier_launch"] += 1
-                    continue
-                returned = end + candidate.homeward_s
-                for uav_id in relay["uav_ids"]:
-                    for unit_id in relay["unit_ids"]:
-                        wait = _relay_slot_shift(missions, uav_id, unit_id,
-                                                 launch, returned, energy, relay)
-                        if wait > EPS:
-                            suggested = wait if suggested is None else min(suggested, wait)
-                            reasons["relay_resource_calendar"] += 1
-                            continue
-                        use_uav = sum(m.uav_id == uav_id for m in missions)
-                        use_unit = sum(m.unit_id == unit_id for m in missions)
-                        choices.append(((-len(included), energy, use_uav,
-                                         use_unit, returned, candidate.candidate_id),
-                                        candidate, uav_id, unit_id, included,
-                                        launch, end, energy))
-            choices.sort(key=lambda row: row[0])
-            site_uses: dict[str, int] = defaultdict(int)
-            for _, candidate, uav_id, unit_id, included, launch, end, energy in choices:
-                if site_uses[candidate.candidate_id] >= 2:
-                    continue
-                site_uses[candidate.candidate_id] += 1
-                mission_id = f"R{len(missions) + 1:03d}"
-                mission = RelayMission(mission_id, uav_id, unit_id, candidate,
-                                       launch, first.start_s, end,
-                                       end + candidate.homeward_s, energy)
-                copied = dict(assigned)
-                copied.update({item.slice_id: mission_id for item in included})
-                expanded.append(([*missions, mission], copied))
-                if len(expanded) >= limit:
-                    break
-        if not expanded:
-            return [], suggested, dict(reasons)
-        expanded.sort(key=lambda pair: (
-            len(pair[0]) - len(state.missions),
-            sum(m.energy_kwh for m in pair[0][len(state.missions):]),
-            max((m.return_s for m in pair[0]), default=0.0)))
-        variants = expanded[:limit]
-    return variants, 0.0, dict(reasons)
-
-
-def _insert_task(ctx: Context, state: JointState, task: RouteTask,
-                 candidates: list[RelayCandidate], links: LinkEvaluator,
-                 relay: dict[str, Any], positions: dict[str, tuple[float, float, float]],
-                 step_s: float, site_tree: cKDTree | None,
-                 profiles: dict[tuple[str, Any, str], RouteProfile],
-                 access_cache: dict[tuple[Any, ...], bool], limit: int,
-                 candidate_limit: int, start_probes: int, soft_horizon_s: float,
-                 earliest_start_s: float = 0.0
-                 ) -> tuple[list[JointState], dict[str, int]]:
-    if not math.isfinite(earliest_start_s) or earliest_start_s < 0:
-        raise ValueError("运输候选最早出发时刻必须非负且有限")
-    options = ctx.options(task.route)
-    reasons: dict[str, int] = defaultdict(int)
-    if not options:
-        return [], {"no_feasible_transport_type": 1}
-    choices: list[tuple[tuple[Any, ...], JointState]] = []
-    for kind in sorted(options, key=lambda k: (options[k]["duration_s"], k)):
-        option = options[kind]
-        latest = _latest_hard_start(ctx, task.route, option)
-        if latest < -EPS:
-            reasons["deadline_before_time_zero"] += 1
+def _blind_blocks(profile: RouteProfile,
+                  sites: list[RelayCandidate],
+                  split_on_site_change: bool = False) -> list[BlindBlock] | None:
+    """相邻盲区共用中继；精细排班时保留站点集合变化边界。"""
+    blocks: list[BlindBlock] = []
+    current: list[int] = []
+    common: set[int] = set()
+    previous_supported: set[int] = set()
+    begin = end = 0.0
+    for item in profile.slices:
+        if item.direct_available:
+            if current:
+                blocks.append(BlindBlock(begin, end, frozenset(common), tuple(current)))
+                current, common, previous_supported = [], set(), set()
             continue
-        key = task.batch_id, task.route, kind
-        if key not in profiles:
-            profiles[key] = _route_profile(
-                ctx, task, kind, option, positions, links, step_s,
-                candidates, site_tree, access_cache)
-        profile = profiles[key]
-        if profile.uncovered_slices:
-            reasons["route_has_uncoverable_communication_slices"] += 1
-            continue
+        supported = {j for j in profile.support[item.slice_id]
+                     if sites[j].max_service_s >= item.end_s - item.start_s - EPS}
+        if not supported:
+            return None
+        extending = common.intersection(supported)
+        extending = {j for j in extending
+                     if sites[j].max_service_s >= item.end_s - begin - EPS}
+        if current and (item.start_s > end + 1e-5 or not extending or
+                        (split_on_site_change and supported != previous_supported)):
+            blocks.append(BlindBlock(begin, end, frozenset(common), tuple(current)))
+            current, common = [], set()
+        if not current:
+            begin, common = item.start_s, set(supported)
+        else:
+            common = extending
+        end = item.end_s
+        current.append(item.slice_id)
+        previous_supported = supported
+    if current:
+        blocks.append(BlindBlock(begin, end, frozenset(common), tuple(current)))
+    return blocks
+
+
+def _shortlist_sites(source_slices: list[TimeSlice], all_sites: list[RelayCandidate],
+                     links: LinkEvaluator, limit: int,
+                     cache: dict[tuple[Any, ...], bool]) -> list[RelayCandidate]:
+    """保留逐段覆盖和双走廊互补站点；单点覆盖率不能替代两站联合覆盖。"""
+    blind = [item for item in source_slices if not item.direct_available]
+    if not blind:
+        return []
+    # 每条单区空间走廊取一个完整的机型剖面；其他走廊另取抽样用于排名。
+    # 这些仅用于选候选，所有正式路线随后仍逐段认证。
+    primary: dict[str, str] = {}
+    for item in blind:
+        if item.sortie_id.startswith("SRC_S"):
+            zone = item.sortie_id.rsplit("_", 1)[0]
+            old = primary.get(zone)
+            if old is None or item.sortie_id.endswith("_B"):
+                primary[zone] = item.sortie_id
+    primary_names = set(primary.values())
+    stride = max(1, math.ceil(len(blind) / 480))
+    sample = [item for i, item in enumerate(blind)
+              if item.sortie_id in primary_names or i % stride == 0 or i == len(blind)-1]
+    tree = cKDTree(np.asarray([site.hover for site in all_sites], dtype=float))
+    budget = bidirectional_limit_db(links.radios["transport"],
+                                    links.radios["relay_access"], links.system_loss_db)
+    radius = 1000.0 * 10.0 ** ((budget - 32.45 -
+                20.0 * math.log10(links.frequency_mhz)) / 20.0)
+    covers = [0 for _ in all_sites]
+    groups: dict[str, int] = defaultdict(int)
+    progress = ProgressBar("站点完整走廊认证", len(sample))
+    for index, item in enumerate(sample):
+        progress.update(index)
+        bit = 1 << index
+        if item.sortie_id in primary_names:
+            groups[item.sortie_id] |= bit
+        for j in tree.query_ball_point(item.midpoint, radius + 1e-4):
+            if _access_certified(all_sites[int(j)], item, links, cache):
+                covers[int(j)] |= bit
+    progress.close()
+    universe = (1 << len(sample)) - 1
+    union = 0
+    for mask in covers:
+        union |= mask
+    if union != universe:
+        raise ValueError(f"{(universe ^ union).bit_count()} 个通信分段没有可认证中继点")
+    selected: list[int] = []
+    remaining = universe
+    while remaining:
+        j = max(range(len(all_sites)), key=lambda k: (
+            (covers[k] & remaining).bit_count(), -all_sites[k].outward_s,
+            -all_sites[k].travel_energy_kwh))
+        selected.append(j)
+        remaining &= ~covers[j]
+    # 枚举一条或两条空间走廊的两站覆盖组合。按覆盖模式压缩等价候选，
+    # 优先保留稀缺组合，再复用已选站点。不能把每段各有一个站点误作两站可覆盖。
+    targets = sorted(set(groups.values()) | {
+        left | right for i, left in enumerate(groups.values())
+        for right in list(groups.values())[i+1:]})
+    obligations = []
+    progress = ProgressBar("互补中继站点组合", len(targets))
+    for n, target in enumerate(targets):
+        progress.update(n)
+        patterns: dict[int, int] = {}
+        for j, cover in enumerate(covers):
+            mask = cover & target
+            if not mask:
+                continue
+            old = patterns.get(mask)
+            if old is None or (
+                all_sites[j].outward_s + all_sites[j].homeward_s,
+                all_sites[j].travel_energy_kwh) < (
+                all_sites[old].outward_s + all_sites[old].homeward_s,
+                all_sites[old].travel_energy_kwh):
+                patterns[mask] = j
+        entries = list(patterns.items())
         pairs = []
-        for uav in ctx.uavs:
-            if uav.type_id != kind:
+        for i, (mask, j) in enumerate(entries):
+            if mask == target:
+                pairs.append((j,))
+            else:
+                pairs.extend((j, k) for other, k in entries[i+1:]
+                             if mask | other == target)
+        if pairs:
+            obligations.append((len(pairs), target, pairs))
+    progress.close()
+    for _, target, pairs in sorted(obligations, key=lambda x: (x[0], x[1])):
+        best = min(pairs, key=lambda pair: (
+            sum(j not in selected for j in pair),
+            sum(all_sites[j].outward_s + all_sites[j].homeward_s for j in pair),
+            sum(all_sites[j].travel_energy_kwh for j in pair), pair))
+        selected.extend(j for j in best if j not in selected)
+    if len(selected) > limit:
+        raise ValueError(f"逐段与互补覆盖需保留 {len(selected)} 站点，"
+                         f"超过 --relay-sites={limit}，请增大候选预算")
+    print(f"Q3：保留 {len(selected)} 个站点，保障 {len(obligations)} 组"
+          "单/双走廊的两站覆盖可能性", flush=True)
+    return [all_sites[j] for j in selected]
+
+
+def _joint_choices(ctx: Context, route_sets: list[tuple[str, list[RouteTask]]],
+                   positions: dict[str, tuple[float, float, float]],
+                   links: LinkEvaluator, step_s: float,
+                   sites: list[RelayCandidate],
+                   cache: dict[tuple[Any, ...], bool]) -> list[JointChoice]:
+    unique: dict[tuple[tuple[str, tuple[str, ...]], ...], RouteTask] = {}
+    for _, tasks in route_sets:
+        for task in tasks:
+            unique.setdefault(task.route.visits, task)
+    tree = cKDTree(np.asarray([site.hover for site in sites], dtype=float)) if sites else None
+    choices: list[JointChoice] = []
+    progress = ProgressBar("运输路线通信认证", len(unique))
+    for number, task in enumerate(unique.values(), 1):
+        progress.update(number - 1)
+        named = RouteTask(f"C{number:03d}", task.route)
+        for kind, option in sorted(ctx.options(task.route).items()):
+            if _latest_hard_start(ctx, task.route, option) < -EPS:
                 continue
-            for battery in ctx.batteries:
-                if battery.type_id != kind:
-                    continue
-                charge = charge_to_full_s(float(option["return_soc"]),
-                                          battery.full_charge_s)
-                first = _transport_slot(state, uav.uav_id, battery.battery_id,
-                                        0.0, float(option["duration_s"]), charge)
-                pairs.append((first, uav.uav_id, battery.battery_id,
-                              battery, charge))
-        pairs.sort(key=lambda row: (row[0], row[1], row[2]))
-        used: dict[str, int] = defaultdict(int)
-        considered = 0
-        for earliest, uav_id, _, battery, charge in pairs:
-            if used[uav_id] >= 2 or considered >= 8:
+            profile = _route_profile(ctx, named, kind, option, positions,
+                                     links, step_s, sites, tree, cache)
+            if profile.uncovered_slices:
                 continue
-            used[uav_id] += 1
-            considered += 1
-            start = max(earliest, earliest_start_s)
-            horizon = latest if math.isfinite(latest) else soft_horizon_s
-            successes = 0
-            for _ in range(start_probes):
-                start = _transport_slot(state, uav_id, battery.battery_id,
-                                        start, float(option["duration_s"]), charge)
-                if start > horizon + EPS:
-                    reasons["deadline_or_horizon"] += 1
-                    break
-                shifted, shifted_slices = _shift_template(
-                    profile.segments, profile.slices, start, len(state.slices))
-                variants, wait, failed = _relay_options_fast(
-                    state, profile, shifted_slices, candidates, links, relay,
-                    candidate_limit, access_cache)
-                for name, count in failed.items():
-                    reasons[name] += count
-                if variants:
-                    sortie, deliveries = _make_sortie(
-                        ctx, task, kind, option, uav_id, battery, start)
-                    for missions, assigned in variants:
-                        trial = JointState(
-                            [*state.sorties, sortie], [*state.deliveries, *deliveries],
-                            {**state.trajectories, task.batch_id: shifted},
-                            [*state.slices, *shifted_slices], assigned, missions)
-                        choices.append(((*_state_score(trial), start, kind,
-                                         uav_id, battery.battery_id), trial))
-                    successes += 1
-                    if successes >= 2:
-                        break
-                    start += 120.0
-                elif failed.get("no_spatial_relay_site") or failed.get(
-                        "route_has_uncoverable_communication_slices"):
-                    break
-                else:
-                    start += max(15.0, float(wait) if wait is not None else 90.0)
-    choices.sort(key=lambda row: row[0])
-    distinct: list[JointState] = []
-    seen: set[tuple[Any, ...]] = set()
-    for _, trial in choices:
-        current = trial.sorties[-1]
-        signature = (current["type_id"], current["uav_id"],
-                     current["battery_id"], round(current["start_s"] / 60),
-                     tuple(sorted((m.candidate.candidate_id, m.uav_id,
-                                   m.unit_id) for m in trial.missions)))
-        if signature in seen:
+            blocks = _blind_blocks(profile, sites, split_on_site_change=True)
+            if blocks is not None:
+                choices.append(JointChoice(named, kind, option, profile, blocks))
+    progress.close()
+    supported = {box for choice in choices for box in choice.task.route.box_ids}
+    missing = set(ctx.boxes) - supported
+    if missing:
+        raise ValueError(f"{len(missing)} 箱没有可用路线/中继组合（示例：{sorted(missing)[:5]}）；"
+                         "可提高 --relay-sites 或缩小 --candidate-spacing-m")
+    return choices
+
+
+def _prune_dominated_sites(sites: list[RelayCandidate],
+                           choices: list[JointChoice]
+                           ) -> tuple[list[RelayCandidate], list[JointChoice]]:
+    """只删除对所有候选盲段均不优的站点，保持当前模型的可行域。"""
+    blocks = [block for choice in choices for block in choice.blocks]
+    signatures = [frozenset(index for index, block in enumerate(blocks)
+                            if site_index in block.sites)
+                  for site_index in range(len(sites))]
+    kept = []
+    for i, site in enumerate(sites):
+        if not signatures[i]:
             continue
-        seen.add(signature)
-        distinct.append(trial)
-        if len(distinct) >= limit:
-            break
-    return distinct, dict(reasons)
+        dominated = any(
+            i != j and signatures[i] <= signatures[j] and
+            site.outward_s >= other.outward_s and
+            site.homeward_s >= other.homeward_s and
+            site.max_service_s <= other.max_service_s and
+            site.travel_energy_kwh >= other.travel_energy_kwh and
+            (signatures[i] != signatures[j] or
+             site.outward_s > other.outward_s or
+             site.homeward_s > other.homeward_s or
+             site.max_service_s < other.max_service_s or
+             site.travel_energy_kwh > other.travel_energy_kwh)
+            for j, other in enumerate(sites))
+        if not dominated:
+            kept.append(i)
+    remap = {old: new for new, old in enumerate(kept)}
+    reduced = []
+    for choice in choices:
+        profile = choice.profile
+        support = {slice_id: {remap[j] for j in available if j in remap}
+                   for slice_id, available in profile.support.items()}
+        new_profile = RouteProfile(profile.segments, profile.slices, {},
+                                   support, [])
+        new_blocks = [BlindBlock(
+            block.begin_s, block.end_s,
+            frozenset(remap[j] for j in block.sites if j in remap),
+            block.slice_ids) for block in choice.blocks]
+        if any(not block.sites for block in new_blocks):
+            raise AssertionError("站点支配筛选删除了唯一可用的中继覆盖")
+        reduced.append(JointChoice(choice.task, choice.kind, choice.option,
+                                   new_profile, new_blocks))
+    return [sites[i] for i in kept], reduced
 
 
-def _attempt_schedule(ctx: Context, tasks: list[RouteTask],
-                      candidates: list[RelayCandidate], relay: dict[str, Any],
-                      links: LinkEvaluator, dem: DemGrid,
-                      positions: dict[str, tuple[float, float, float]],
-                      step_s: float, site_tree: cKDTree | None,
-                      beam_width: int, candidate_limit: int,
-                      start_probes: int, max_repairs: int,
-                      soft_horizon_s: float,
-                      access_cache: dict[tuple[Any, ...], bool],
-                      grouping: str
-                      ) -> tuple[JointState, dict[str, Any]]:
-    beam = [_empty_joint_state()]
-    profiles: dict[tuple[str, Any, str], RouteProfile] = {}
-    pending = _task_order(ctx, tasks, "hard_slack")
-    repairs = 0
-    index = 0
-    started = perf_counter()
-    while index < len(pending):
-        task = pending[index]
-        successors: list[JointState] = []
-        failures: dict[str, int] = defaultdict(int)
-        # 先尝试少量已证明可达的中继点。只有本批排不进时才扩大范围。
-        limits = [min(candidate_limit, len(candidates)),
-                  min(max(4 * candidate_limit, 64), len(candidates)),
-                  len(candidates)]
-        for widen, site_limit in enumerate(dict.fromkeys(limits)):
-            for state in beam:
-                states, reasons = _insert_task(
-                    ctx, state, task, candidates, links, relay, positions,
-                    step_s, site_tree, profiles, access_cache,
-                    max(3, beam_width // 2), site_limit,
-                    start_probes + 4 * widen, soft_horizon_s)
-                successors.extend(states)
-                for name, count in reasons.items():
-                    failures[name] += count
-            if successors:
-                break
-        if not successors:
-            pieces = (_split_current_task(ctx, task, pending)
-                      if repairs < max_repairs else None)
-            if pieces is not None:
-                pending[index:index + 1] = _task_order(ctx, pieces, "hard_slack")
-                repairs += 1
-                print(f"Q3 {grouping}: 拆分 {task.batch_id} -> "
-                      f"{','.join(part.batch_id for part in pieces)}; "
-                      f"当前已交付={len(beam[0].deliveries)}/80 箱",
-                      flush=True)
+def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate],
+                 choices: list[JointChoice], horizon: int, slots: int,
+                 time_limit: float, workers: int, hard_only: bool,
+                 hints: dict[str, Any] | None = None,
+                 fixed_transport: dict[tuple[Any, str], tuple[int, str, str]] | None = None,
+                 fixed_partial_transport: dict[tuple[Any, str], tuple[int, str, str]] | None = None,
+                 fixed_relay_schedule: dict[int, tuple[int, int, int]] | None = None,
+                 feasibility_only: bool = False,
+                 diversity_cuts: list[list[tuple[int, int, int]]] | None = None,
+                 coverage_cuts: list[list[tuple[int, float, float]]] | None = None,
+                 max_concurrent_blind: int | None = None,
+                 require_all_routes: bool = False,
+                 slot_site_indices: list[int] | None = None,
+                 relax_relay_resources: bool = False,
+                 relax_relay_uavs: bool = False,
+                 relax_relay_units: bool = False,
+                 wanted_boxes: set[str] | None = None,
+                 resource_available: dict[str, dict[str, int]] | None = None,
+                 time_grid_s: int | None = None,
+                 objective_mode: str = "balanced",
+                 explicit_relay_uavs: bool = True,
+                 search_seed: int = 20260923) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    try:
+        from ortools.sat.python import cp_model
+    except ImportError as exc:
+        raise RuntimeError("缺少 OR-Tools。请在 code 目录运行："
+                           r".\.venv\Scripts\python.exe -m pip install -r requirements.txt") from exc
+    wanted = (set(wanted_boxes) if wanted_boxes is not None else
+              ({bid for bid, box in ctx.boxes.items()
+                if not pd.isna(box["hard_deadline_s"])}
+               if hard_only else set(ctx.boxes)))
+    if not wanted <= set(ctx.boxes):
+        raise ValueError("指定货箱包含不在输入数据中的编号")
+    pool = [choice for choice in choices if set(choice.task.route.box_ids) <= wanted]
+    if not pool:
+        raise ValueError("当前阶段没有运输路线候选")
+    if slot_site_indices is not None and (len(slot_site_indices) != slots or
+                                          any(not 0 <= j < len(sites)
+                                              for j in slot_site_indices)):
+        raise ValueError("固定中继站点必须逐架次指定有效站点编号")
+    model = cp_model.CpModel()
+    resource_available = resource_available or {}
+    selected, starts, ends = [], [], []
+    uav_intervals: dict[str, list[Any]] = defaultdict(list)
+    battery_intervals: dict[str, list[Any]] = defaultdict(list)
+    transport_uav_by_type: dict[str, list[Any]] = defaultdict(list)
+    transport_battery_by_type: dict[str, list[Any]] = defaultdict(list)
+    aggregate_transport = fixed_transport is None and fixed_partial_transport is None
+    uav_assign: dict[tuple[int, str], Any] = {}
+    battery_assign: dict[tuple[int, str], Any] = {}
+    for i, choice in enumerate(pool):
+        sel = model.NewBoolVar(f"route_{i}")
+        if require_all_routes:
+            model.Add(sel == 1)
+        fixed = (fixed_transport.get((choice.task.route.visits, choice.kind))
+                 if fixed_transport is not None else None)
+        partial_fixed = (fixed_partial_transport.get(
+            (choice.task.route.visits, choice.kind))
+            if fixed_partial_transport is not None else None)
+        if partial_fixed is not None:
+            fixed = partial_fixed
+            model.Add(sel == 1)
+        if fixed_transport is not None:
+            if fixed is None:
+                raise ValueError("固定运输排程包含与候选不一致的路线")
+            model.Add(sel == 1)
+        latest = min(horizon, math.floor(_latest_hard_start(
+            ctx, choice.task.route, choice.option))) if math.isfinite(
+                _latest_hard_start(ctx, choice.task.route, choice.option)) else horizon
+        latest = max(0, latest)
+        start = model.NewIntVar(0, latest, f"route_start_{i}")
+        if time_grid_s is not None:
+            model.AddModuloEquality(0, start, time_grid_s)
+        end = model.NewIntVar(0, horizon + math.ceil(choice.option["duration_s"]),
+                              f"route_end_{i}")
+        duration = math.ceil(choice.option["duration_s"] - EPS)
+        model.Add(end == start + duration).OnlyEnforceIf(sel)
+        model.Add(end == 0).OnlyEnforceIf(sel.Not())
+        model.Add(start == 0).OnlyEnforceIf(sel.Not())
+        if fixed is not None:
+            model.Add(start == fixed[0])
+        selected.append(sel); starts.append(start); ends.append(end)
+        for box_id in choice.task.route.box_ids:
+            deadline = ctx.boxes[box_id]["hard_deadline_s"]
+            if not pd.isna(deadline):
+                model.Add(start + math.ceil(choice.option["completion_offsets"][box_id] - EPS)
+                          <= math.floor(float(deadline) + EPS)).OnlyEnforceIf(sel)
+        uvars = []
+        if aggregate_transport:
+            transport_uav_by_type[choice.kind].append(model.NewOptionalIntervalVar(
+                start, duration, start + duration, sel, f"ui_{i}"))
+        else:
+            for uav in ctx.uavs:
+                if uav.type_id != choice.kind:
+                    continue
+                use = model.NewBoolVar(f"u_{i}_{uav.uav_id}")
+                model.AddImplication(use, sel)
+                model.Add(start >= resource_available.get("transport_uav", {}).get(
+                    uav.uav_id, 0)).OnlyEnforceIf(use)
+                uav_intervals[uav.uav_id].append(model.NewOptionalIntervalVar(
+                    start, duration, start + duration, use, f"ui_{i}_{uav.uav_id}"))
+                uav_assign[(i, uav.uav_id)] = use
+                uvars.append(use)
+                if fixed is not None:
+                    model.Add(use == int(uav.uav_id == fixed[1]))
+            model.Add(sum(uvars) == sel)
+        bvars = []
+        if aggregate_transport:
+            matching = [battery for battery in ctx.batteries
+                        if battery.type_id == choice.kind]
+            if not matching or any(battery.full_charge_s != matching[0].full_charge_s
+                                   for battery in matching):
+                raise ValueError("同型运输电池充电参数不一致，不能合并排程")
+            occupied = duration + math.ceil(charge_to_full_s(
+                choice.option["return_soc"], matching[0].full_charge_s) - EPS)
+            transport_battery_by_type[choice.kind].append(
+                model.NewOptionalIntervalVar(start, occupied,
+                                             start + occupied, sel, f"bi_{i}"))
+        else:
+            for battery in ctx.batteries:
+                if battery.type_id != choice.kind:
+                    continue
+                use = model.NewBoolVar(f"b_{i}_{battery.battery_id}")
+                model.AddImplication(use, sel)
+                model.Add(start >= resource_available.get("transport_battery", {}).get(
+                    battery.battery_id, 0)).OnlyEnforceIf(use)
+                occupied = duration + math.ceil(charge_to_full_s(
+                    choice.option["return_soc"], battery.full_charge_s) - EPS)
+                battery_intervals[battery.battery_id].append(model.NewOptionalIntervalVar(
+                    start, occupied, start + occupied, use,
+                    f"bi_{i}_{battery.battery_id}"))
+                battery_assign[(i, battery.battery_id)] = use
+                bvars.append(use)
+                if fixed is not None:
+                    model.Add(use == int(battery.battery_id == fixed[2]))
+            model.Add(sum(bvars) == sel)
+    for box_id in sorted(wanted):
+        model.Add(sum(selected[i] for i, choice in enumerate(pool)
+                      if box_id in choice.task.route.box_ids) == 1)
+    if fixed_partial_transport is not None:
+        available_keys = {(choice.task.route.visits, choice.kind) for choice in pool}
+        if not set(fixed_partial_transport) <= available_keys:
+            raise ValueError("固定早期运输路线不在当前候选池中")
+    # 失败的中继子问题只触发排程多样化；这些排除约束不是原题无解证明。
+    for cut_number, cut in enumerate(diversity_cuts or []):
+        different = []
+        for i, low, high in cut:
+            if not 0 <= i < len(pool):
+                raise ValueError("排程反馈引用了不存在的路线")
+            before = model.NewBoolVar(f"cut_{cut_number}_{i}_before")
+            after = model.NewBoolVar(f"cut_{cut_number}_{i}_after")
+            model.Add(starts[i] < low).OnlyEnforceIf(before)
+            model.Add(starts[i] > high).OnlyEnforceIf(after)
+            different.extend((selected[i].Not(), before, after))
+        if different:
+            model.AddBoolOr(different)
+    # 若一组通信分段无法由两处站点覆盖，它们不能同时处于盲区。
+    # 这是对相对分段的时间析取约束，而非只排除某一轮的起飞时刻。
+    for cut_number, cut in enumerate(coverage_cuts or []):
+        alternatives = []
+        for i, _, _ in cut:
+            if not 0 <= i < len(pool):
+                raise ValueError("通信反馈引用了不存在的路线")
+            alternatives.append(selected[i].Not())
+        for a, (i, _, end_offset) in enumerate(cut):
+            for b, (j, begin_offset, _) in enumerate(cut):
+                if a == b:
+                    continue
+                before = model.NewBoolVar(f"coverage_{cut_number}_{a}_before_{b}")
+                model.Add(starts[i] - starts[j] <=
+                          math.floor(begin_offset - end_offset + EPS)).OnlyEnforceIf(before)
+                alternatives.append(before)
+        model.AddBoolOr(alternatives)
+    for intervals in [*uav_intervals.values(), *battery_intervals.values()]:
+        model.AddNoOverlap(intervals)
+    if aggregate_transport:
+        for kind in {uav.type_id for uav in ctx.uavs}:
+            group = [uav for uav in ctx.uavs if uav.type_id == kind]
+            intervals = list(transport_uav_by_type[kind])
+            for uav in group:
+                available_s = resource_available.get("transport_uav", {}).get(
+                    uav.uav_id, 0)
+                if available_s > 0:
+                    intervals.append(model.NewIntervalVar(
+                        0, available_s, available_s, f"prior_u_{uav.uav_id}"))
+            model.AddCumulative(intervals, [1] * len(intervals), len(group))
+        for kind in {battery.type_id for battery in ctx.batteries}:
+            group = [battery for battery in ctx.batteries
+                     if battery.type_id == kind]
+            intervals = list(transport_battery_by_type[kind])
+            for battery in group:
+                available_s = resource_available.get("transport_battery", {}).get(
+                    battery.battery_id, 0)
+                if available_s > 0:
+                    intervals.append(model.NewIntervalVar(
+                        0, available_s, available_s,
+                        f"prior_b_{battery.battery_id}"))
+            model.AddCumulative(intervals, [1] * len(intervals), len(group))
+    if max_concurrent_blind is not None:
+        if max_concurrent_blind < 1 or slots:
+            raise ValueError("运输盲段并发上限仅适用于无中继架次的运输主问题")
+        blind_intervals = []
+        for i, choice in enumerate(pool):
+            for k, block in enumerate(choice.blocks):
+                begin = math.floor(block.begin_s + EPS)
+                end = math.ceil(block.end_s - EPS)
+                blind_intervals.append(model.NewOptionalIntervalVar(
+                    starts[i] + begin, end - begin, starts[i] + end,
+                    selected[i], f"blind_{i}_{k}"))
+        model.AddCumulative(blind_intervals,
+                            [1] * len(blind_intervals), max_concurrent_blind)
+    params = relay["params"]
+    prep = math.ceil(params["prep_s"] - EPS)
+    setup = math.ceil(params["link_setup_s"] - EPS)
+    outward = [math.ceil(site.outward_s - EPS) for site in sites]
+    homeward = [math.ceil(site.homeward_s - EPS) for site in sites]
+    max_service = [math.floor(site.max_service_s - EPS) for site in sites]
+    relay_span_bound = (horizon + max(homeward, default=0) +
+                        math.ceil(max(params["turnaround_s"],
+                                      params["full_charge_s"])) + 1)
+    active, site_vars, launches, readies, service_ends, returns = [], [], [], [], [], []
+    relay_uav_intervals: list[Any] = []
+    relay_uav_named_intervals: dict[str, list[Any]] = defaultdict(list)
+    relay_uav_named_assign: dict[tuple[int, str], Any] = {}
+    relay_unit_intervals: list[Any] = []
+    relay_charge_vars: list[Any] = []
+    for r in range(slots):
+        use = model.NewBoolVar(f"relay_{r}")
+        which = [model.NewBoolVar(f"site_{r}_{j}") for j in range(len(sites))]
+        model.Add(sum(which) == use)
+        if slot_site_indices is not None:
+            for j, site_var in enumerate(which):
+                model.Add(site_var == use if j == slot_site_indices[r] else site_var == 0)
+        if fixed_relay_schedule is not None and r in fixed_relay_schedule:
+            site_index, fixed_ready, fixed_end = fixed_relay_schedule[r]
+            if not 0 <= site_index < len(sites):
+                raise ValueError("固定中继架次的站点编号无效")
+            model.Add(use == 1)
+            model.Add(which[site_index] == 1)
+        launch = model.NewIntVar(0, horizon, f"relay_launch_{r}")
+        if time_grid_s is not None:
+            model.AddModuloEquality(0, launch, time_grid_s)
+        ready = model.NewIntVar(0, horizon, f"relay_ready_{r}")
+        service_end = model.NewIntVar(0, horizon, f"relay_service_end_{r}")
+        returned = model.NewIntVar(0, horizon + max(homeward, default=0),
+                                    f"relay_return_{r}")
+        model.Add(ready == launch + prep + setup +
+                  sum(outward[j] * which[j] for j in range(len(sites)))).OnlyEnforceIf(use)
+        model.Add(returned == service_end +
+                  sum(homeward[j] * which[j] for j in range(len(sites)))).OnlyEnforceIf(use)
+        model.Add(service_end >= ready + 1).OnlyEnforceIf(use)
+        model.Add(service_end - ready <=
+                  sum(max_service[j] * which[j] for j in range(len(sites)))).OnlyEnforceIf(use)
+        if fixed_relay_schedule is not None and r in fixed_relay_schedule:
+            model.Add(ready == fixed_ready)
+            model.Add(service_end == fixed_end)
+        for var in (launch, ready, service_end, returned):
+            model.Add(var == 0).OnlyEnforceIf(use.Not())
+        active.append(use); site_vars.append(which)
+        launches.append(launch); readies.append(ready)
+        service_ends.append(service_end); returns.append(returned)
+        uav_span = model.NewIntVar(0, relay_span_bound, f"relay_uav_span_{r}")
+        model.Add(uav_span == returned - launch +
+                  math.ceil(params["turnaround_s"]))
+        if explicit_relay_uavs and not relax_relay_resources and not relax_relay_uavs:
+            relay_uses = []
+            for uav_id in relay["uav_ids"]:
+                owns = model.NewBoolVar(f"relay_uav_{r}_{uav_id}")
+                model.AddImplication(owns, use)
+                model.Add(launch >= resource_available.get("relay_uav", {}).get(
+                    uav_id, 0)).OnlyEnforceIf(owns)
+                relay_uav_named_intervals[uav_id].append(
+                    model.NewOptionalIntervalVar(
+                        launch, uav_span,
+                        returned + math.ceil(params["turnaround_s"]), owns,
+                        f"relay_uav_occupancy_{r}_{uav_id}"))
+                relay_uav_named_assign[(r, uav_id)] = owns
+                relay_uses.append(owns)
+            model.Add(sum(relay_uses) == use)
+        else:
+            relay_uav_intervals.append(model.NewOptionalIntervalVar(
+                launch, uav_span,
+                returned + math.ceil(params["turnaround_s"]), use,
+                f"relay_uav_occupancy_{r}"))
+        # 组件充电使用题目两阶段公式。SOC>=90% 的短任务只需补足慢充段，
+        # 不能套用 SOC<90% 的公式，否则会把这些任务多占用数百秒。
+        energy_use_mwh = round(params["energy_use_kwh"] * 1_000_000)
+        service_power_kw = params["hover_power_kw"] + params["comm_extra_power_kw"]
+        service_mwh_per_s = math.ceil(service_power_kw * 1_000_000 / 3600 - EPS)
+        setup_mwh = math.ceil(service_power_kw * params["link_setup_s"] *
+                              1_000_000 / 3600 - EPS)
+        energy_mwh = (sum(math.ceil(site.travel_energy_kwh * 1_000_000 - EPS) *
+                          which[j] for j, site in enumerate(sites)) +
+                      setup_mwh * use + service_mwh_per_s *
+                      (service_end - ready))
+        full_s = math.ceil(params["full_charge_s"] - EPS)
+        charge_s = model.NewIntVar(0, full_s, f"relay_charge_{r}")
+        relay_charge_vars.append(charge_s)
+        short_discharge = model.NewBoolVar(f"relay_soc_above_90_{r}")
+        model.Add(10 * energy_mwh <= energy_use_mwh).OnlyEnforceIf(short_discharge)
+        model.Add(10 * energy_mwh >= energy_use_mwh + 1).OnlyEnforceIf(
+            short_discharge.Not())
+        fast_numerator = 7 * full_s * energy_mwh
+        fast_denominator = 2 * energy_use_mwh
+        model.Add(charge_s * fast_denominator >= fast_numerator).OnlyEnforceIf(
+            short_discharge)
+        model.Add(charge_s * fast_denominator <=
+                  fast_numerator + fast_denominator - 1).OnlyEnforceIf(
+            short_discharge)
+        slow_numerator = full_s * (5 * energy_use_mwh + 13 * energy_mwh)
+        slow_denominator = 18 * energy_use_mwh
+        model.Add(charge_s * slow_denominator >= slow_numerator).OnlyEnforceIf(
+            short_discharge.Not())
+        model.Add(charge_s * slow_denominator <=
+                  slow_numerator + slow_denominator - 1).OnlyEnforceIf(
+            short_discharge.Not())
+        unit_span = model.NewIntVar(0, relay_span_bound, f"relay_unit_span_{r}")
+        model.Add(unit_span == returned - launch + charge_s)
+        occupied_end = model.NewIntVar(0, relay_span_bound,
+                                        f"relay_unit_end_{r}")
+        model.Add(occupied_end == returned + charge_s)
+        relay_unit_intervals.append(model.NewOptionalIntervalVar(
+            launch, unit_span, occupied_end, use,
+            f"relay_unit_occupancy_{r}"))
+        if r and slot_site_indices is None and fixed_relay_schedule is None:
+            model.Add(active[r - 1] >= use)
+            model.Add(launches[r - 1] <= launch).OnlyEnforceIf(use)
+    if not relax_relay_resources:
+        if explicit_relay_uavs and not relax_relay_uavs:
+            for uav_id in relay["uav_ids"]:
+                model.AddNoOverlap(relay_uav_named_intervals[uav_id])
+        else:
+            for uav_id in relay["uav_ids"]:
+                available_s = resource_available.get("relay_uav", {}).get(uav_id, 0)
+                if available_s > 0:
+                    relay_uav_intervals.append(model.NewIntervalVar(
+                        0, available_s, available_s, f"prior_ru_{uav_id}"))
+        for unit_id in relay["unit_ids"]:
+            available_s = resource_available.get("relay_unit", {}).get(unit_id, 0)
+            if available_s > 0:
+                relay_unit_intervals.append(model.NewIntervalVar(
+                    0, available_s, available_s, f"prior_re_{unit_id}"))
+        if not relax_relay_uavs and not explicit_relay_uavs:
+            model.AddCumulative(relay_uav_intervals,
+                                [1] * len(relay_uav_intervals),
+                                len(relay["uav_ids"]))
+        if not relax_relay_units:
+            model.AddCumulative(relay_unit_intervals,
+                                [1] * len(relay_unit_intervals),
+                                len(relay["unit_ids"]))
+    block_assign: dict[tuple[int, int, int], Any] = {}
+    for i, choice in enumerate(pool):
+        for k, block in enumerate(choice.blocks):
+            if max_concurrent_blind is not None:
                 continue
-            best = min(beam, key=_state_score)
-            return best, {
-                "status": "INCOMPLETE", "failed_batch_id": task.batch_id,
-                "failed_box_ids": list(task.route.box_ids),
-                "failed_zone_ids": list(task.route.zones),
-                "failure_counts": dict(failures),
-                "adaptive_splits": repairs,
-                "scheduled_sorties": len(best.sorties),
-                "scheduled_boxes": len(best.deliveries),
-                "elapsed_s": round(perf_counter() - started, 2),
-            }
-        successors.sort(key=_state_score)
-        # 同分数附近保留不同的中继悬停位置和机型，避免单一局部排程淹没搜索束。
-        diverse = []
-        signatures = set()
-        for state in successors:
-            recent = state.sorties[-1]
-            signature = (recent["type_id"], recent["uav_id"],
-                         tuple(sorted((m.candidate.candidate_id,
-                                       m.uav_id, m.unit_id)
-                                      for m in state.missions)))
-            if signature in signatures:
+            zvars = []
+            for r in range(slots):
+                z = model.NewBoolVar(f"cover_{i}_{k}_{r}")
+                model.AddImplication(z, active[r])
+                model.Add(readies[r] <= starts[i] + math.floor(block.begin_s + EPS)).OnlyEnforceIf(z)
+                model.Add(service_ends[r] >= starts[i] + math.ceil(block.end_s - EPS)).OnlyEnforceIf(z)
+                model.Add(z <= sum(site_vars[r][j] for j in block.sites))
+                block_assign[(i, k, r)] = z
+                zvars.append(z)
+            model.Add(sum(zvars) == selected[i])
+    late_vars = []
+    for i, choice in enumerate(pool):
+        for box_id in choice.task.route.box_ids:
+            box = ctx.boxes[box_id]
+            if not pd.isna(box["hard_deadline_s"]):
                 continue
-            signatures.add(signature)
-            diverse.append(state)
-            if len(diverse) >= beam_width:
-                break
-        chosen = {id(state) for state in diverse}
-        beam = diverse + [state for state in successors
-                          if id(state) not in chosen][:max(0, beam_width - len(diverse))]
-        index += 1
-        if index == 1 or index % 5 == 0 or index == len(pending):
-            best = beam[0]
-            print(f"Q3 {grouping}: {index}/{len(pending)} 批, "
-                  f"已交付={len(best.deliveries)}/80 箱, "
-                  f"运输={len(best.sorties)} 架次, "
-                  f"耗时={perf_counter() - started:.1f}s", flush=True)
-    first_failure: dict[str, Any] | None = None
-    for state in beam:
-        transport_bad = [row for row in check_plan(
-            ctx, {"sorties": state.sorties, "deliveries": state.deliveries})
-            if row["status"] != "PASS"]
-        bounds = {s["batch_id"]: (s["start_s"], s["return_s"])
-                  for s in state.sorties}
-        comm = verify_continuous_coverage(
-            state.trajectories, links,
-            communication_rows(state.slices, state.assigned, bounds),
-            relay_rows_from_missions(state.missions))
-        resources = validate_relay_rows(
-            relay_rows_from_missions(state.missions), ctx.data_run, links, dem)
-        if not transport_bad and comm["status"] == "PASS" and resources["status"] == "PASS":
-            return state, {"status": "PASS", "scheduled_sorties": len(state.sorties),
-                           "scheduled_boxes": len(state.deliveries),
-                           "adaptive_splits": repairs,
-                           "elapsed_s": round(perf_counter() - started, 2)}
-        if first_failure is None:
-            first_failure = {"transport_failure": transport_bad[0] if transport_bad else None,
-                             "communication_status": comm["status"],
-                             "communication_failure": comm["issues"][0] if comm["issues"] else None,
-                             "resource_status": resources["status"],
-                             "resource_failure": resources.get("first_failure")}
-    return beam[0], {"status": "FAILED_VALIDATION",
-                     "scheduled_sorties": len(beam[0].sorties),
-                     "scheduled_boxes": len(beam[0].deliveries),
-                     "adaptive_splits": repairs,
-                     "elapsed_s": round(perf_counter() - started, 2),
-                     **(first_failure or {})}
-
-
-def _split_current_task(ctx: Context, task: RouteTask,
-                        pending: list[RouteTask]) -> list[RouteTask] | None:
-    """只拆尚未安排的当前批次，不清空已通过的排程。"""
-    if len(task.route.box_ids) <= 1:
-        return None
-    visits = task.route.visits
-    if len(visits) > 1:
-        pieces = [[visit] for visit in visits]
+            late = model.NewIntVar(0, horizon * 2, f"late_{i}_{box_id}")
+            model.Add(late >= starts[i] +
+                      math.ceil(choice.option["completion_offsets"][box_id] - EPS) -
+                      math.floor(float(box["expected_s"]) + EPS)).OnlyEnforceIf(selected[i])
+            model.Add(late == 0).OnlyEnforceIf(selected[i].Not())
+            late_vars.append((late, max(1, round(float(box["priority"])))) )
+    makespan = model.NewIntVar(0, max(
+        horizon + max(homeward, default=0),
+        horizon + max(math.ceil(c.option["duration_s"]) for c in pool)),
+        "joint_makespan")
+    model.AddMaxEquality(makespan, ends + returns)
+    transport_wh = sum(round(float(choice.option["energy_kwh"]) * 1000) * selected[i]
+                       for i, choice in enumerate(pool))
+    relay_power_kw = params["hover_power_kw"] + params["comm_extra_power_kw"]
+    service_wh_per_second = math.ceil(relay_power_kw * 1000.0 / 3600.0 - EPS)
+    relay_wh = (sum(round(site.travel_energy_kwh * 1000) * site_vars[r][j]
+                    for r in range(slots) for j, site in enumerate(sites)) +
+                sum(service_wh_per_second * (service_ends[r] - readies[r]) +
+                    round(relay_power_kw * params["link_setup_s"] * 1000 / 3600) * active[r]
+                    for r in range(slots)))
+    # 优先处理期望时刻的加权迟到，再兼顾返航、能耗和架次数。
+    if not feasibility_only:
+        if objective_mode == "sorties":
+            model.Minimize(100000 * sum(selected) + 1000 * sum(active) +
+                           makespan + transport_wh + relay_wh)
+        elif objective_mode == "relay_sorties":
+            model.Minimize(100000 * sum(active) + 1000 * sum(selected) +
+                           makespan + transport_wh + relay_wh)
+        elif objective_mode == "balanced":
+            model.Minimize(10000 * sum(weight * var for var, weight in late_vars) +
+                           10 * makespan + transport_wh + relay_wh +
+                           50 * sum(selected) + 100 * sum(active))
+        else:
+            raise ValueError("不支持的目标函数模式")
+    if hints:
+        for i, choice in enumerate(pool):
+            key = (choice.task.route.visits, choice.kind)
+            if key in hints.get("routes", {}):
+                model.AddHint(selected[i], 1)
+                model.AddHint(starts[i], hints["routes"][key])
+        for slot, site_index, uav_id, unit_id, ready, service_end in hints.get("relays", []):
+            if slot >= slots or site_index >= len(sites):
+                continue
+            model.AddHint(active[slot], 1)
+            model.AddHint(site_vars[slot][site_index], 1)
+            model.AddHint(readies[slot], ready)
+            model.AddHint(service_ends[slot], service_end)
+            model.AddHint(launches[slot], ready - prep - setup - outward[site_index])
+            model.AddHint(returns[slot], service_end + homeward[site_index])
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit
+    solver.parameters.num_search_workers = workers
+    solver.parameters.random_seed = search_seed
+    label = "运输排程" if slots == 0 else "中继排班"
+    with SolverBudgetBar(label, time_limit):
+        status = solver.Solve(model)
+    report = {"stage": "hard" if hard_only else "full",
+              "solver_status": solver.StatusName(status),
+              "route_options": len(pool), "relay_sites": len(sites),
+              "relay_slots": slots, "boxes": len(wanted),
+              "wall_time_s": solver.WallTime(),
+              "branches": solver.NumBranches(), "conflicts": solver.NumConflicts(),
+              "time_limit_s": time_limit}
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        return None, report
+    route_solution = {}
+    for i, choice in enumerate(pool):
+        if solver.BooleanValue(selected[i]):
+            route_solution[(choice.task.route.visits, choice.kind)] = solver.Value(starts[i])
+    if not feasibility_only:
+        report["objective_value"] = solver.ObjectiveValue()
+        report["best_bound"] = solver.BestObjectiveBound()
+    report["selected_transport_sorties"] = len(route_solution)
+    report["selected_relay_sorties"] = sum(solver.BooleanValue(v) for v in active)
+    relay_ids = [r for r in range(slots) if solver.BooleanValue(active[r])]
+    def assign_identical(ids: list[str], occupied_until: list[int]) -> dict[int, str]:
+        resource_kind = ("relay_uav" if ids is relay["uav_ids"] else "relay_unit")
+        available = {resource_id: resource_available.get(resource_kind, {}).get(
+            resource_id, 0) for resource_id in ids}
+        assignment: dict[int, str] = {}
+        for r in sorted(relay_ids, key=lambda k: (solver.Value(launches[k]), k)):
+            start = solver.Value(launches[r])
+            free = [resource_id for resource_id in ids
+                    if available[resource_id] <= start]
+            if not free:
+                if relax_relay_resources or relax_relay_uavs or relax_relay_units:
+                    assignment[r] = ids[0]
+                    continue
+                raise AssertionError("中继累计资源约束与具体编号分配不一致")
+            resource_id = min(free, key=lambda x: (available[x], x))
+            assignment[r] = resource_id
+            available[resource_id] = occupied_until[r]
+        return assignment
+    uav_until = [solver.Value(returns[r]) + math.ceil(params["turnaround_s"])
+                 for r in range(slots)]
+    unit_until = [solver.Value(returns[r]) + solver.Value(relay_charge_vars[r])
+                  for r in range(slots)]
+    if explicit_relay_uavs and not relax_relay_resources and not relax_relay_uavs:
+        relay_uav_ids = {
+            r: next(uav_id for (slot, uav_id), var in relay_uav_named_assign.items()
+                    if slot == r and solver.BooleanValue(var))
+            for r in relay_ids
+        }
     else:
-        zone, ids = visits[0]
-        middle = len(ids) // 2
-        pieces = [[(zone, ids[:middle])], [(zone, ids[middle:])]]
-    routes = [ctx.route([(zone, list(ids)) for zone, ids in piece])
-              for piece in pieces]
-    if any(not ctx.options(route) for route in routes):
-        return None
-    used = {item.batch_id for item in pending}
-    pieces: list[RouteTask] = []
-    number = 1
-    for route in routes:
-        while f"T{number:03d}" in used:
-            number += 1
-        batch_id = f"T{number:03d}"
-        used.add(batch_id)
-        pieces.append(RouteTask(batch_id, route))
-    if sorted(bid for part in pieces for bid in part.route.box_ids) != sorted(task.route.box_ids):
-        raise AssertionError("拆批导致货箱缺失或重复")
-    return pieces
+        relay_uav_ids = assign_identical(relay["uav_ids"], uav_until)
+    relay_unit_ids = assign_identical(relay["unit_ids"], unit_until)
+    final_available = {kind: dict(resource_available.get(kind, {})) for kind in
+                       ("transport_uav", "transport_battery", "relay_uav", "relay_unit")}
+    transport_ids: dict[int, tuple[str, str]] = {}
+    for i in sorted((i for i in range(len(pool)) if solver.BooleanValue(selected[i])),
+                    key=lambda index: (solver.Value(starts[index]), index)):
+        choice = pool[i]
+        start = solver.Value(starts[i])
+        end = solver.Value(ends[i])
+        if aggregate_transport:
+            available_uavs = [uav.uav_id for uav in ctx.uavs
+                              if uav.type_id == choice.kind and
+                              final_available["transport_uav"].get(uav.uav_id, 0) <= start]
+            available_batteries = [battery for battery in ctx.batteries
+                                   if battery.type_id == choice.kind and
+                                   final_available["transport_battery"].get(
+                                       battery.battery_id, 0) <= start]
+            if not available_uavs or not available_batteries:
+                raise AssertionError("同型累计运输资源无法分配具体编号")
+            uav_id = min(available_uavs, key=lambda uid: (
+                final_available["transport_uav"].get(uid, 0), uid))
+            battery = min(available_batteries, key=lambda item: (
+                final_available["transport_battery"].get(item.battery_id, 0),
+                item.battery_id))
+            battery_id = battery.battery_id
+        else:
+            uav_id = next(uid for (j, uid), var in uav_assign.items()
+                          if j == i and solver.BooleanValue(var))
+            battery_id = next(bid for (j, bid), var in battery_assign.items()
+                              if j == i and solver.BooleanValue(var))
+            battery = next(battery for battery in ctx.batteries
+                           if battery.battery_id == battery_id)
+        transport_ids[i] = uav_id, battery_id
+        final_available["transport_uav"][uav_id] = end
+        occupied = math.ceil(choice.option["duration_s"] - EPS) + math.ceil(
+            charge_to_full_s(choice.option["return_soc"],
+                             battery.full_charge_s) - EPS)
+        final_available["transport_battery"][battery_id] = start + occupied
+    for r in relay_ids:
+        final_available["relay_uav"][relay_uav_ids[r]] = max(
+            final_available["relay_uav"].get(relay_uav_ids[r], 0), uav_until[r])
+        final_available["relay_unit"][relay_unit_ids[r]] = max(
+            final_available["relay_unit"].get(relay_unit_ids[r], 0), unit_until[r])
+    return {
+        "pool": pool,
+        "routes": [(i, solver.Value(starts[i]), *transport_ids[i])
+                   for i in range(len(pool)) if solver.BooleanValue(selected[i])],
+        "relays": [(r, next(j for j, var in enumerate(site_vars[r])
+                           if solver.BooleanValue(var)),
+                    relay_uav_ids[r], relay_unit_ids[r],
+                    solver.Value(readies[r]), solver.Value(service_ends[r]))
+                   for r in relay_ids],
+        "block_relay": {(i, k): r for (i, k, r), var in block_assign.items()
+                        if solver.BooleanValue(var)},
+        "route_hints": route_solution,
+        "resource_available": final_available,
+    }, report
+
+
+def _materialize_solution(ctx: Context, relay: dict[str, Any],
+                          sites: list[RelayCandidate], solution: dict[str, Any]) -> JointState:
+    state = _empty_joint_state()
+    params = relay["params"]
+    batteries = {battery.battery_id: battery for battery in ctx.batteries}
+    relay_id_by_slot: dict[int, str] = {}
+    used_slots = set(solution["block_relay"].values())
+    # 可行性求解可能启用没有承担覆盖的空中继槽；省去这些任务只会释放资源。
+    for number, (slot, site_index, uav_id, unit_id, ready, end) in enumerate(
+            sorted((row for row in solution["relays"] if row[0] in used_slots),
+                   key=lambda row: row[4]), 1):
+        site = sites[site_index]
+        relay_id = f"R{number:03d}"
+        relay_id_by_slot[slot] = relay_id
+        start = ready - params["prep_s"] - site.outward_s - params["link_setup_s"]
+        energy = site.travel_energy_kwh + (
+            params["hover_power_kw"] + params["comm_extra_power_kw"]) * (
+            params["link_setup_s"] + end - ready) / 3600.0
+        state.missions.append(RelayMission(
+            relay_id, uav_id, unit_id, site, float(start), float(ready),
+            float(end), float(end + site.homeward_s), float(energy)))
+    for number, (i, start, uav_id, battery_id) in enumerate(
+            sorted(solution["routes"], key=lambda row: (row[1], row[0])), 1):
+        choice = solution["pool"][i]
+        task = RouteTask(f"T{number:03d}", choice.task.route)
+        sortie, deliveries = _make_sortie(ctx, task, choice.kind, choice.option,
+                                          uav_id, batteries[battery_id], float(start))
+        segments, slices = _shift_template(choice.profile.segments,
+                                            choice.profile.slices,
+                                            float(start), len(state.slices))
+        slices = [replace(item, sortie_id=task.batch_id) for item in slices]
+        state.sorties.append(sortie)
+        state.deliveries.extend(deliveries)
+        state.trajectories[task.batch_id] = segments
+        for k, block in enumerate(choice.blocks):
+            mission_id = relay_id_by_slot[solution["block_relay"][(i, k)]]
+            for old_id in block.slice_ids:
+                state.assigned[len(state.slices) + old_id] = mission_id
+        state.slices.extend(slices)
+    return state
+
+
+def _complete_soft_batches(
+        ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate],
+        choices: list[JointChoice], route_sets: list[tuple[str, list[RouteTask]]],
+        prefix: dict[str, Any], horizon: int, seconds: float, workers: int
+        ) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """完整保留已排通任务，再安排软箱；搜索预算不足时仍有可检查的构造路径。"""
+    result = {key: (list(value) if isinstance(value, list) else dict(value)
+                    if isinstance(value, dict) else value)
+              for key, value in prefix.items()}
+    done = {bid for i, *_ in result["routes"] for bid in result["pool"][i].task.route.box_ids}
+    tasks = next(tasks for name, tasks in route_sets if name == "balanced")
+    pending = [task for task in tasks if not set(task.route.box_ids) & done]
+    reports = []
+    for n, task in enumerate(pending, 1):
+        remaining = set(task.route.box_ids)
+        pool = [c for c in choices if c.task.route.visits == task.route.visits]
+        available = result["resource_available"]
+        latest = max((t for rows in available.values() for t in rows.values()), default=0)
+        local_horizon = max(horizon, latest + 12000)
+        print(f"Q3 逐批插入 {n}/{len(pending)}：已排 {len(done)}/80 箱，"
+              f"本批 {len(remaining)} 箱", flush=True)
+        addition, report = _solve_joint(
+            ctx, relay, sites, pool, local_horizon, 4, seconds, workers, False,
+            wanted_boxes=remaining, resource_available=available,
+            objective_mode="balanced")
+        reports.append({"stage": "soft_batch", "result": report})
+        if addition is None:
+            return None, reports
+        offset = len(result["pool"])
+        slot_offset = max((r[0] for r in result["relays"]), default=-1) + 1
+        result["pool"].extend(addition["pool"])
+        result["routes"].extend((i+offset, start, u, b)
+                                for i, start, u, b in addition["routes"])
+        result["relays"].extend((slot+slot_offset, j, u, b, ready, end)
+                                for slot, j, u, b, ready, end in addition["relays"])
+        result["block_relay"].update({(i+offset, k): slot+slot_offset
+                                      for (i,k),slot in addition["block_relay"].items()})
+        result["resource_available"] = addition["resource_available"]
+        done.update(remaining)
+    if done != set(ctx.boxes):
+        raise AssertionError("逐批插入结束后并未恰好安排全部货箱")
+    return result, reports
+
+
+def _geometry_cache_key(source: dict[str, Any], step: float, spacing: int, limit: int) -> str:
+    """缓存仅减少重复选点；输入或关联代码改变就失效，不复用任何验收结论。"""
+    dependencies = ("q3_1_optimize.py", "q2_1_optimize.py",
+                    "q2_0_baseline.py", "q1_0_baseline.py", "_0_pipeline.py")
+    key = {"source": source, "sample_step_s": float(step), "spacing_m": spacing,
+           "site_limit": limit, "code": {name: sha256(CODE_DIR / name)
+                                       for name in dependencies}}
+    return hashlib.sha256(json.dumps(key, sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def run_scheme1(data_run: Path, output_root: Path, sample_step_s: float,
-                max_groupings: int, beam_width: int, max_repairs: int,
-                soft_horizon_s: float, spacing_m: int,
-                candidate_limit: int, start_probes: int) -> dict[str, Any]:
-    if min(max_groupings, beam_width, spacing_m, candidate_limit,
-           start_probes) < 1 or max_repairs < 0:
-        raise ValueError("组批数、束宽、候选网格、候选数和时间探测数必须为正；拆批数不能为负")
+                spacing_m: int, site_limit: int, relay_slots: int,
+                horizon: int, transport_seconds: float, relay_seconds: float,
+                workers: int, attempts: int, shift_s: int) -> dict[str, Any]:
+    if (sample_step_s <= 0 or min(spacing_m, site_limit, relay_slots,
+                                 horizon, workers, attempts, shift_s) < 1 or
+            transport_seconds <= 0 or relay_seconds <= 0):
+        raise ValueError("分段、候选数、资源时域、尝试次数和时间预算必须为正")
     relay, dem, links, source_meta = _scene(data_run)
     ctx = Context(data_run)
     positions = _node_positions(data_run)
     route_sets = _raw_route_sets(ctx)
-    source_slices = _source_slices_from_raw(
-        ctx, positions, links, sample_step_s, route_sets)
-    candidates, candidate_stats = generate_candidates(
-        dem, links, source_slices, relay, positions["O01"], spacing_m=spacing_m,
-        max_points=12000)
-    site_tree = (cKDTree(np.asarray([item.hover for item in candidates], dtype=float))
-                 if candidates else None)
+    source_slices = _source_slices_from_raw(ctx, positions, links,
+                                            sample_step_s, route_sets)
+    print(f"Q3：已生成 {len(source_slices)} 个源路线通信分段，正在认证中继站点……",
+          flush=True)
+    cache_dir = Path(tempfile.gettempdir()) / "huawei_q3_geometry"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_key = _geometry_cache_key(source_meta, sample_step_s, spacing_m, site_limit)
+    cache_path = cache_dir / f"{cache_key}.json"
+    access_cache: dict[tuple[Any, ...], bool] = {}
+    cache_record = None
+    if cache_path.exists():
+        try:
+            cache_record = json.loads(cache_path.read_text(encoding="utf-8"))
+            sites = [RelayCandidate(**row) for row in cache_record["sites"]]
+            if not sites or len(sites) > site_limit:
+                raise ValueError("缓存站点数量无效")
+            candidate_stats = cache_record["stats"]
+            print(f"Q3：复用相同数据、参数与代码的 {len(sites)} 个站点；"
+                  "正式运输路线和最终结果仍重新认证", flush=True)
+        except (ValueError, TypeError, KeyError, OSError):
+            cache_record = None
+    if cache_record is None:
+        all_sites, candidate_stats = generate_candidates(
+            dem, links, source_slices, relay, positions["O01"],
+            spacing_m=spacing_m, max_points=12000)
+        if not all_sites:
+            raise ValueError("DEM 和返航能量约束下没有可用中继悬停点")
+        print(f"Q3：{len(all_sites)} 个物理站点候选；正在筛选互补覆盖……", flush=True)
+        sites = _shortlist_sites(source_slices, all_sites, links, site_limit, access_cache)
+        json_dump(cache_path, {"sites": [asdict(site) for site in sites],
+                              "stats": candidate_stats})
+    print(f"Q3：{len(sites)} 个中继站点；开始生成运输与通信组合", flush=True)
+    choices = _joint_choices(ctx, route_sets, positions, links,
+                             sample_step_s, sites, access_cache)
+    print(f"Q3：{len(choices)} 个可认证的路线/机型组合；"
+          "开始硬时限货物与中继联合排程", flush=True)
     stamp = datetime.now().strftime("%y%m%d_%H%M%S_%f")
     table_dir = output_root / f"q3_opt1_{stamp}_table"
     figure_dir = output_root / f"q3_opt1_{stamp}_figure"
-    # 组批方案各尝试一次；每次内部保留已排任务并对当前批逐级放宽候选、局部拆分。
-    preferred = ("balanced", "compact", "neighbor_pair",
-                 "small_batches", "hard_split", "single_box_fallback")
-    route_sets.sort(key=lambda pair: preferred.index(pair[0])
-                    if pair[0] in preferred else len(preferred))
-    attempted: list[dict[str, Any]] = []
-    selected: JointState | None = None
-    selected_config: dict[str, Any] | None = None
-    best_partial: tuple[int, JointState, dict[str, Any]] | None = None
-    access_cache: dict[tuple[Any, ...], bool] = {}
-    for name, tasks in route_sets[:max_groupings]:
-        print(f"Q3 方案1: 开始组批 {name}, 初始 {len(tasks)} 架次候选", flush=True)
-        state, outcome = _attempt_schedule(
-            ctx, tasks, candidates, relay, links, dem, positions,
-            sample_step_s, site_tree, beam_width, candidate_limit,
-            start_probes, max_repairs, soft_horizon_s, access_cache, name)
-        config = {"grouping": name, "task_order": "hard_slack",
-                  "initial_transport_batches": len(tasks),
-                  "candidate_limit": candidate_limit,
-                  "start_probes": start_probes,
-                  "beam_width": beam_width}
-        attempted.append({**config, **outcome})
-        print(f"Q3 方案1 {len(attempted)}/{min(max_groupings, len(route_sets))}: "
-              f"{name}, 拆批={outcome.get('adaptive_splits', 0)}, "
-              f"{outcome['status']}, "
-              f"已交付={len(state.deliveries)}/80 箱, "
-              f"运输={len(state.sorties)} 架次", flush=True)
-        if best_partial is None or len(state.deliveries) > best_partial[0]:
-            best_partial = len(state.deliveries), state, config
-        if outcome["status"] == "PASS":
-            selected, selected_config = state, {**config, **outcome}
-            # 首次完整通过后停止；此处求可行方案，不宣称全局最优。
-            break
     table_dir.mkdir(parents=True, exist_ok=False)
-    if selected is None:
-        summary = {
-            "status": "SEARCH_INCOMPLETE",
-            "interpretation": "当前搜索预算内未找到完整的 80 箱联合方案；未设固定运输架次数上限，也不证明题目无解",
-            "source": source_meta, "candidate_stats": candidate_stats,
-            "attempts": attempted, "global_optimality_proven": False,
-            "best_partial_delivered_boxes": best_partial[0] if best_partial else 0,
-            "best_partial_transport_sorties": len(best_partial[1].sorties) if best_partial else 0,
-            "best_partial_grouping": best_partial[2] if best_partial else None,
-            "table_dir": str(table_dir.resolve()), "figure_dir": None,
-        }
+    # 先联合解决有硬时限的货箱。中继站点、启停、充电和运输时间同时决策，
+    # 避免运输先占满早期时窗后，中继只能反复宣告无法覆盖。
+    hard_boxes = {bid for bid, box in ctx.boxes.items()
+                  if not pd.isna(box["hard_deadline_s"])}
+    grouped = {task.route.visits for name, tasks in route_sets
+               if name in ("balanced", "compact") for task in tasks}
+    hard_grouped = [c for c in choices if c.task.route.visits in grouped
+                    and set(c.task.route.box_ids) <= hard_boxes]
+    attempt_log: list[dict[str, Any]] = []
+    hard_solution = None
+    hard_variants = [(hard_grouped, min(10, relay_slots)),
+                     (hard_grouped, relay_slots),
+                     ([c for c in choices if set(c.task.route.box_ids) <= hard_boxes],
+                      relay_slots)]
+    for stage, (pool, count) in enumerate(hard_variants[:attempts], 1):
+        print(f"Q3 硬时限联合排程 {stage}：{len(hard_boxes)} 箱、"
+              f"{len(pool)} 个路线/机型候选、{count} 个中继架次槽", flush=True)
+        hard_horizon = min(horizon, math.ceil(max(
+            _latest_hard_start(ctx, c.task.route, c.option) + c.option["duration_s"]
+            for c in pool)))
+        hard_solution, report = _solve_joint(
+            ctx, relay, sites, pool, hard_horizon, count, transport_seconds,
+            workers, True, feasibility_only=True)
+        attempt_log.append({"stage": "hard_joint", "result": report})
+        print(f"Q3 硬时限联合排程：{report['solver_status']}", flush=True)
+        if hard_solution is not None:
+            break
+    winning = None
+    if hard_solution is not None:
+        used = set(hard_solution["block_relay"].values())
+        hard_solution["relays"] = [r for r in hard_solution["relays"] if r[0] in used]
+        fixed = {(hard_solution["pool"][i].task.route.visits,
+                  hard_solution["pool"][i].kind): (start, uav, battery)
+                 for i, start, uav, battery in hard_solution["routes"]}
+        fixed_relays = {slot: (j, ready, end)
+                        for slot, j, _, _, ready, end in hard_solution["relays"]}
+        selected = [hard_solution["pool"][i] for i, *_ in hard_solution["routes"]]
+        soft_grouped = [c for c in choices if c.task.route.visits in grouped
+                        and not set(c.task.route.box_ids) & hard_boxes]
+        print(f"Q3：硬时限 {len(hard_boxes)}/{len(hard_boxes)} 箱已排通，"
+              f"{len(selected)} 运输架次；正在安排其余 {80-len(hard_boxes)} 箱", flush=True)
+        full_solution, report = _solve_joint(
+            ctx, relay, sites, selected + soft_grouped, horizon, relay_slots,
+            relay_seconds, workers, False, fixed_partial_transport=fixed,
+            fixed_relay_schedule=fixed_relays, feasibility_only=True)
+        attempt_log.append({"stage": "all_boxes_joint", "result": report})
+        if full_solution is None:
+            # 已有硬时限方案始终保留。软时限只计迟到，不应因搜索超时丢弃已交付货箱。
+            print("Q3：全部软箱联合插入尚未得到解，改为按整批逐次插入并检查资源", flush=True)
+            full_solution, reports = _complete_soft_batches(
+                ctx, relay, sites, choices, route_sets, hard_solution,
+                horizon, min(relay_seconds, 30.0), workers)
+            attempt_log.extend(reports)
+            report = {"solver_status": "FEASIBLE_CONSTRUCTION"}
+        if full_solution is not None:
+            winning = full_solution, sites, report
+    summary: dict[str, Any] = {
+        "status": "SEARCH_INCOMPLETE",
+        "method": "complementary relay sites; hard-deadline joint CP-SAT; "
+                  "grouped soft-delivery insertion; independent continuous verification",
+        "interpretation": "有限候选和时间预算内未找到完整可验收方案；UNKNOWN 不证明不可行",
+        "source": source_meta, "candidate_stats": candidate_stats,
+        "shortlisted_relay_sites": len(sites),
+        "attempts": attempt_log, "attempt_count": len(attempt_log),
+        "global_optimality_proven": False,
+        "table_dir": str(table_dir.resolve()), "figure_dir": None,
+    }
+    json_dump(table_dir / "Q3_候选筛选统计.json", candidate_stats)
+    if winning is None:
         json_dump(table_dir / "Q3_运行摘要.json", summary)
         return summary
-    _save_joint_tables(table_dir, selected, relay)
-    json_dump(table_dir / "Q3_候选筛选统计.json", candidate_stats)
+    full_solution, winning_sites, relay_report = winning
+    state = _materialize_solution(ctx, relay, winning_sites, full_solution)
+    _save_joint_tables(table_dir, state, relay)
     validation = validate_official_tables(table_dir, data_run, links, dem)
     _save_verification(table_dir, validation)
-    transport_energy = sum(s["energy_kwh"] for s in selected.sorties)
-    relay_energy = sum(m.energy_kwh for m in selected.missions)
-    summary = {
+    summary.update({
         "status": validation["status"],
-        "method": "deadline-first raw-box batching with cached communication corridors and local repair",
-        "interpretation": "从 80 箱独立形成架次；保留已排任务，仅对当前批扩大候选或拆批；有限候选不证明全局最优",
-        "assumption": "同一中继架次可同时保障多架运输机，每架运输机每个时刻只采用一种通信方式",
-        "global_optimality_proven": False, "source": source_meta,
-        "selected_configuration": selected_config, "attempts": attempted,
-        "candidate_stats": candidate_stats,
-        "transport_sorties": len(selected.sorties),
-        "relay_sorties": len(selected.missions),
-        "delivered_boxes": len(selected.deliveries),
-        "transport_last_return_s": max(s["return_s"] for s in selected.sorties),
-        "relay_last_return_s": max((m.return_s for m in selected.missions), default=0.0),
-        "joint_makespan_s": max([s["return_s"] for s in selected.sorties] +
-                                [m.return_s for m in selected.missions]),
-        "transport_energy_kwh": transport_energy,
-        "relay_energy_kwh": relay_energy,
-        "total_energy_kwh": transport_energy + relay_energy,
+        "interpretation": "分层候选方案已导出并独立复核；未证明全局最优",
+        "candidate_pool_optimality_proven": False,
+        "relay_solver_status": relay_report["solver_status"],
+        "transport_sorties": len(state.sorties),
+        "relay_sorties": len(state.missions),
+        "delivered_boxes": len(state.deliveries),
+        "transport_last_return_s": max(s["return_s"] for s in state.sorties),
+        "relay_last_return_s": max((m.return_s for m in state.missions), default=0.0),
+        "joint_makespan_s": max([s["return_s"] for s in state.sorties] +
+                                [m.return_s for m in state.missions]),
+        "transport_energy_kwh": sum(s["energy_kwh"] for s in state.sorties),
+        "relay_energy_kwh": sum(m.energy_kwh for m in state.missions),
         "soft_weighted_lateness_s": sum(d["priority"] * d["soft_lateness_s"]
-                                        for d in selected.deliveries
+                                        for d in state.deliveries
                                         if d["hard_deadline_s"] is None),
         "communication_status": validation["communication"]["status"],
         "transport_status": validation["transport_status"],
         "relay_resource_status": validation["relay_resources"]["status"],
-        "table_dir": str(table_dir.resolve()),
-        "figure_dir": str(figure_dir.resolve()) if validation["status"] == "PASS" else None,
-    }
-    json_dump(table_dir / "Q3_运行摘要.json", summary)
-    if summary["status"] == "PASS":
-        _save_figures(figure_dir, selected.slices, selected.assigned, selected.missions)
+    })
+    summary["total_energy_kwh"] = (summary["transport_energy_kwh"] +
+                                   summary["relay_energy_kwh"])
+    if validation["status"] == "PASS":
+        _save_figures(figure_dir, state.slices, state.assigned, state.missions)
         (table_dir / "Q3_READY.txt").write_text(
-            "Q3 direct scheme 1 independently verified PASS\n"
+            "Q3 decomposed scheme 1 independently verified PASS\n"
             f"source_manifest_sha256={source_meta['source_manifest_sha256']}\n",
             encoding="utf-8")
+        summary["figure_dir"] = str(figure_dir.resolve())
+    json_dump(table_dir / "Q3_运行摘要.json", summary)
     return summary
 
 
@@ -1805,44 +2325,47 @@ def main(argv: list[str] | None = None) -> int:
                         help="0_outputs 中经过验收的原始数据目录")
     parser.add_argument("--output-root", type=Path,
                         default=CODE_DIR / "3_outputs" / "1_optimize")
-    parser.add_argument("--sample-step-s", type=float, default=20.0)
+    parser.add_argument("--sample-step-s", type=float, default=20.0,
+                        help="通信候选原子的最长秒数；可设 15，最终仍做连续区间复核")
     parser.add_argument("--candidate-spacing-m", type=int, default=500)
-    parser.add_argument("--max-groupings", type=int, default=5,
-                        help="最多尝试几种初始组批，不在同一组批上重复从头排程")
-    parser.add_argument("--beam-width", type=int, default=6)
-    parser.add_argument("--max-repairs", type=int, default=16,
-                        help="每种组批允许对当前未排入架次拆批的次数")
-    parser.add_argument("--candidate-limit", type=int, default=16,
-                        help="先搜索每个盲区排名靠前的中继点；失败时自动扩大")
-    parser.add_argument("--start-probes", type=int, default=8,
-                        help="每个运输机/电池组合探测的起飞时刻数")
-    parser.add_argument("--soft-horizon-s", type=float, default=86400.0)
+    parser.add_argument("--relay-sites", type=int, default=72)
+    parser.add_argument("--relay-slots", type=int, default=18)
+    parser.add_argument("--horizon-s", type=int, default=21600,
+                        help="运输开始/中继服务结束的搜索时域；返航及充电可在该时域之后结束")
+    parser.add_argument("--transport-time-limit-s", type=float, default=120.0,
+                        help="每个硬时限运输与中继联合模型的时间上限")
+    parser.add_argument("--relay-time-limit-s", type=float, default=120.0,
+                        help="其余货箱插入联合模型的时间上限")
+    parser.add_argument("--attempts", type=int, default=3,
+                        help="硬时限候选扩展次数，最多采用三种候选规模")
+    parser.add_argument("--feedback-shift-s", type=int, default=120,
+                        help=argparse.SUPPRESS)
+    parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--validate-only", type=Path, default=None,
-                        metavar="Q3_TABLE_DIR", help="重验已导出的第三问表格")
+                        metavar="Q3_TABLE_DIR", help="只重验已导出的第三问表格")
     args = parser.parse_args(argv)
     data_run = (args.data_run.resolve() if args.data_run is not None else
                 find_data_run(CODE_DIR, EXPECTED_MANIFEST))
     if args.validate_only is not None:
-        table_dir = args.validate_only.resolve()
         _, dem, links, _ = _scene(data_run)
-        report = validate_official_tables(table_dir, data_run, links, dem)
+        report = validate_official_tables(args.validate_only.resolve(),
+                                          data_run, links, dem)
         print(json.dumps({"status": report["status"],
+                          "transport_status": report["transport_status"],
                           "communication_status": report["communication"]["status"],
-                          "relay_resource_status": report["relay_resources"]["status"],
-                          "transport_status": report["transport_status"]},
+                          "relay_resource_status": report["relay_resources"]["status"]},
                          ensure_ascii=False, indent=2))
         return 0 if report["status"] == "PASS" else 2
-    summary = run_scheme1(
-        data_run, args.output_root.resolve(), args.sample_step_s,
-        args.max_groupings, args.beam_width, args.max_repairs,
-        args.soft_horizon_s, args.candidate_spacing_m,
-        args.candidate_limit, args.start_probes)
+    summary = run_scheme1(data_run, args.output_root.resolve(),
+                          args.sample_step_s, args.candidate_spacing_m,
+                          args.relay_sites, args.relay_slots, args.horizon_s,
+                          args.transport_time_limit_s, args.relay_time_limit_s,
+                          args.workers, args.attempts, args.feedback_shift_s)
     print(json.dumps({key: summary.get(key) for key in (
         "status", "transport_sorties", "relay_sorties", "delivered_boxes",
         "joint_makespan_s", "total_energy_kwh", "table_dir", "figure_dir")},
         ensure_ascii=False, indent=2))
     return 0 if summary["status"] == "PASS" else 2
-
 
 # 通信与中继资源复核内置于同一脚本，保持单文件交付。
 DECISION_GUARD_DB = 1e-6
