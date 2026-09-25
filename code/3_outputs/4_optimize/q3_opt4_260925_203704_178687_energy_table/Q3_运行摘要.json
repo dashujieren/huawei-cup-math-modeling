@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "method": "Q3 scheme 4: critical-chain guided joint transport-relay compression",
+  "source_scheme3_table": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\3_optimize\\q3_opt3_260925_155213_988304_sorties_table",
+  "source": {
+    "data_run": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\0_outputs\\run_20260924_154122",
+    "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+    "dem_source_sha256": "c68703e0cc8f94f4bd52ff6e9974b66a2dae33865f0723ad71c04b6694bf4fbf"
+  },
+  "source_manifest_sha256": "dab98bafa9b2101b0b6265be77ec45e95baecd5646eadf0c6acb905f3e45ca5e",
+  "code_sha256": {
+    "q3_4_optimize.py": "415d22e0b91260c8a65502419af92b1d4ca1ba4112de3b64d1281dca0a3c0a60",
+    "q3_3_optimize.py": "c893e377f002ceac3d43dcc4935f8ea1c035efcdb96deb720751e72b41f56234",
+    "q3_2_optimize.py": "298d30aa88b52e178adff8775b27014cbe884ed2ad8ac47f8497f35885c0991c",
+    "q3_1_optimize.py": "721b7123119b67f410bd1c1a6e146c1751eb8c1b0b73cd5d3290d53045782d67",
+    "q2_1_optimize.py": "6dd36782f21659551c4601cbfeeee1f83b0cd9291a658324def1a9c1086f9c33"
+  },
+  "goal": "energy",
+  "stage": "rebatch",
+  "grade": "strict",
+  "reference_metrics": {
+    "transport_sorties": 24,
+    "relay_sorties": 10,
+    "makespan_s": 12846.727665741508,
+    "energy_kwh": 75.10511214044642,
+    "weighted_lateness": 550194.0010686526
+  },
+  "final_metrics": {
+    "weighted_lateness": 364912.33068525326,
+    "makespan_s": 10358.727665741508,
+    "energy_kwh": 74.74786901631524,
+    "transport_sorties": 24,
+    "relay_sorties": 9
+  },
+  "improved_makespan_from_source": true,
+  "hard_deadline_min_slack_s": 0.21780525668145856,
+  "transport_status": "PASS",
+  "communication_status": "PASS",
+  "relay_resource_status": "PASS",
+  "global_optimality_proven": false,
+  "candidate_site_count": 40,
+  "candidate_stats": {
+    "certified": 394,
+    "uncovered_routes": 7,
+    "new_sites": 20,
+    "site_budget_reached": 0,
+    "site_grid_exceeded": 0
+  },
+  "search_wall_s": 972.1719999999987,
+  "table_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_energy_table",
+  "figure_dir": "F:\\1_zlgod\\00_云研课题组\\20260923_HuaWei Cup_GitHub\\huawei-cup-math-modeling\\code\\3_outputs\\4_optimize\\q3_opt4_260925_203704_178687_energy_figure"
+}

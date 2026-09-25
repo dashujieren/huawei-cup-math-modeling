@@ -1597,7 +1597,8 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
                  objective_reference: Mapping[str, float] | None = None,
                  metric_limits: Mapping[str, int] | None = None,
                  explicit_relay_uavs: bool = True,
-                 search_seed: int = 20260923) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+                 search_seed: int = 20260923,
+                 hard_deadline_buffer_s: float = 0.0) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     try:
         from ortools.sat.python import cp_model
     except ImportError as exc:
@@ -1662,7 +1663,7 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
             deadline = ctx.boxes[box_id]["hard_deadline_s"]
             if not pd.isna(deadline):
                 model.Add(start + math.ceil(choice.option["completion_offsets"][box_id] - EPS)
-                          <= math.floor(float(deadline) + EPS)).OnlyEnforceIf(sel)
+                          <= math.floor(float(deadline) - hard_deadline_buffer_s + EPS)).OnlyEnforceIf(sel)
         uvars = []
         if aggregate_transport:
             transport_uav_by_type[choice.kind].append(model.NewOptionalIntervalVar(
@@ -1988,6 +1989,8 @@ def _solve_joint(ctx: Context, relay: dict[str, Any], sites: list[RelayCandidate
             model.Add(sum(selected) <= upper)
         elif metric == "relay_sorties":
             model.Add(sum(active) <= upper)
+        elif metric == "total_sorties":
+            model.Add(sum(selected) + sum(active) <= upper)
         else:
             raise ValueError(f"不支持的指标界限：{metric}")
     # 优先处理期望时刻的加权迟到，再兼顾返航、能耗和架次数。

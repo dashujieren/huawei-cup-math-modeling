@@ -1,0 +1,171 @@
+{
+  "status": "READ_ONLY_DIAGNOSTICS_NOT_A_NEW_SOLVER_RESULT",
+  "source_index": "code/3_outputs/4_optimize/q3_opt4_260925_203704_178687_index.json",
+  "source_index_sha256": "6d5ef97dd275fa6ed8bee13ad2830050d3c6c71c9c627b89a5fdcd9672345c28",
+  "definitions": {
+    "C": "max of all transport and relay return times, seconds",
+    "W": "sum(return-start) for all transport and relay sorties, aircraft-seconds; excludes post-return charging and turnaround",
+    "relay_duration_lower_bound": "(sum fixed relay durations + max(0,Nr-2)*300)/2; conditional on these durations, not a global bound"
+  },
+  "variants": {
+    "fast": {
+      "source_table": "code/3_outputs/4_optimize/q3_opt4_260925_203704_178687_fast_table",
+      "input_file_sha256": {
+        "Q3_运输明细.csv": "11df82aa5ed77a784b8f979046bea46892768eb2927a20a4246f91cafb8602c6",
+        "Q3_中继资源时间线.csv": "26134abd48798bcd57c088e6cb54b2c934d07624dfdb08271485a839ea17208e",
+        "Q3_通信保障.csv": "65f3e842c915301cc896e95f04e0f92afed8f7df72ec4088c17408457b64846d",
+        "Q3_逐箱时限检查.csv": "b7a7cc40dba05d3187c97b4dce7a02bc79315b9086a831bc9fb2c2b9625e2cef",
+        "Q3_运行摘要.json": "bbc33604d59b65e5df441420dd728af4e01b4537432dc2c83d00a3b2304158f4"
+      },
+      "transport_sorties": 26,
+      "relay_sorties": 9,
+      "C_s": 10124.681682937,
+      "transport_return_s": 10047.812018639006,
+      "relay_return_s": 10124.681682937,
+      "last_delivery_s": 9427.316009319504,
+      "transport_W_s": 45301.271179936,
+      "relay_W_s": 16984.288396879998,
+      "total_W_s": 62285.559576816,
+      "total_W_aircraft_hours": 17.30154432689333,
+      "relay_service_s": 8086.0,
+      "hard_min_slack_s": 0.2178052566814585,
+      "fixed_relay_duration_bound_s": 9542.144198439999,
+      "fixed_structure_shift_diagnostic": {
+        "nodes": 35,
+        "edges": 91,
+        "earliest_C_s": 10119.356766755995,
+        "saving_s": 5.324916181005392,
+        "max_original_residual_s": 0.0,
+        "status": "UNVALIDATED_DIAGNOSTIC_ONLY"
+      },
+      "exported_checks": [
+        {
+          "check_id": "Q3_TRANSPORT",
+          "status": "PASS",
+          "detail": "80 箱、运输轨迹、硬截止及机/电池资源复核通过"
+        },
+        {
+          "check_id": "RELAY_RESOURCE",
+          "status": "PASS",
+          "detail": "中继物理与资源独立复核"
+        },
+        {
+          "check_id": "COMM_CONTINUOUS",
+          "status": "PASS",
+          "detail": "PASS=1842, FAIL=0, UNVERIFIED=0"
+        },
+        {
+          "check_id": "SCHEME4_STATUS",
+          "status": "PASS",
+          "detail": "未覆盖诊断行=0"
+        }
+      ]
+    },
+    "energy": {
+      "source_table": "code/3_outputs/4_optimize/q3_opt4_260925_203704_178687_energy_table",
+      "input_file_sha256": {
+        "Q3_运输明细.csv": "addc11935708c146d48210078f8715052d2099049c57e50e4040dd1f845e7473",
+        "Q3_中继资源时间线.csv": "02e881f1dada38f20eb58314eccea4912027742b088ac354733785e3ae6e5070",
+        "Q3_通信保障.csv": "fa4c0511e434333af29fde50bce2134d302d6be96026e8398c59e353c4015cb3",
+        "Q3_逐箱时限检查.csv": "48e83b6dc9dfe12573d1f6b0c3d65db30a3d820022248c567ab095cb252d90f3",
+        "Q3_运行摘要.json": "b5996fcf4096c4f7e0cbd5bb7ecf67e739c52b46e5b9b54dea445f56dfe23422"
+      },
+      "transport_sorties": 24,
+      "relay_sorties": 9,
+      "C_s": 10358.727665742,
+      "transport_return_s": 10333.111144337276,
+      "relay_return_s": 10358.727665742,
+      "last_delivery_s": 9597.316009319504,
+      "transport_W_s": 42442.176341857106,
+      "relay_W_s": 18100.391589806,
+      "total_W_s": 60542.56793166311,
+      "total_W_aircraft_hours": 16.81737998101753,
+      "relay_service_s": 8780.0,
+      "hard_min_slack_s": 0.2178052566814585,
+      "fixed_relay_duration_bound_s": 10100.195794903,
+      "fixed_structure_shift_diagnostic": {
+        "nodes": 33,
+        "edges": 86,
+        "earliest_C_s": 10353.815633762995,
+        "saving_s": 4.9120319790054054,
+        "max_original_residual_s": 0.0,
+        "status": "UNVALIDATED_DIAGNOSTIC_ONLY"
+      },
+      "exported_checks": [
+        {
+          "check_id": "Q3_TRANSPORT",
+          "status": "PASS",
+          "detail": "80 箱、运输轨迹、硬截止及机/电池资源复核通过"
+        },
+        {
+          "check_id": "RELAY_RESOURCE",
+          "status": "PASS",
+          "detail": "中继物理与资源独立复核"
+        },
+        {
+          "check_id": "COMM_CONTINUOUS",
+          "status": "PASS",
+          "detail": "PASS=1725, FAIL=0, UNVERIFIED=0"
+        },
+        {
+          "check_id": "SCHEME4_STATUS",
+          "status": "PASS",
+          "detail": "未覆盖诊断行=0"
+        }
+      ]
+    },
+    "lateness": {
+      "source_table": "code/3_outputs/4_optimize/q3_opt4_260925_203704_178687_lateness_table",
+      "input_file_sha256": {
+        "Q3_运输明细.csv": "53bd5cda48c66933cea65a8d539bb98b6766e4fcbc1eb629ff39f43ee097e23e",
+        "Q3_中继资源时间线.csv": "ce4c25d2758c4671c7d8e8096dcde88301d8fbe78953100bb140cd94352eb1b3",
+        "Q3_通信保障.csv": "e377cd69d50e901831e42ce170820ba3e2c2758b9429412504292e2a77fd5c8e",
+        "Q3_逐箱时限检查.csv": "2528f230d2573d6da20de37e76e9fcda57dfcc13c555bac81ad50b746a3a715e",
+        "Q3_运行摘要.json": "68b485de2102cdc934f42dc56508ff64f8691c670be8af2dde99048e987837fe"
+      },
+      "transport_sorties": 26,
+      "relay_sorties": 9,
+      "C_s": 10124.681682937,
+      "transport_return_s": 10047.812018639006,
+      "relay_return_s": 10124.681682937,
+      "last_delivery_s": 9427.316009319504,
+      "transport_W_s": 45301.271179936004,
+      "relay_W_s": 17701.413105851,
+      "total_W_s": 63002.68428578701,
+      "total_W_aircraft_hours": 17.500745634940834,
+      "relay_service_s": 8648.0,
+      "hard_min_slack_s": 122.49946670341706,
+      "fixed_relay_duration_bound_s": 9900.7065529255,
+      "fixed_structure_shift_diagnostic": {
+        "nodes": 35,
+        "edges": 92,
+        "earliest_C_s": 10121.135298579637,
+        "saving_s": 3.546384357363422,
+        "max_original_residual_s": 0.0,
+        "status": "UNVALIDATED_DIAGNOSTIC_ONLY"
+      },
+      "exported_checks": [
+        {
+          "check_id": "Q3_TRANSPORT",
+          "status": "PASS",
+          "detail": "80 箱、运输轨迹、硬截止及机/电池资源复核通过"
+        },
+        {
+          "check_id": "RELAY_RESOURCE",
+          "status": "PASS",
+          "detail": "中继物理与资源独立复核"
+        },
+        {
+          "check_id": "COMM_CONTINUOUS",
+          "status": "PASS",
+          "detail": "PASS=1842, FAIL=0, UNVERIFIED=0"
+        },
+        {
+          "check_id": "SCHEME4_STATUS",
+          "status": "PASS",
+          "detail": "未覆盖诊断行=0"
+        }
+      ]
+    }
+  }
+}

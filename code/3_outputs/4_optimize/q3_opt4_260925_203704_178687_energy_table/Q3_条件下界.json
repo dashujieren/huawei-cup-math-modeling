@@ -1,0 +1,6 @@
+{
+  "fixed_source_transport_workload_bound_s": 8998.995890581677,
+  "fixed_source_relay_workload_bound_s": 11959.205417922,
+  "scope": "只对方案三原任务时长、机型、两类实体机库存成立；改站点、改组批或机型后不可作为新方案下界",
+  "status": "CONDITIONAL_ONLY"
+}
