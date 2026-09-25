@@ -1,0 +1,26 @@
+[
+  {
+    "round": 0,
+    "search_stage": "原解映射",
+    "solver_stage": "full",
+    "solver_status": "OPTIMAL",
+    "route_options": 31,
+    "relay_sites": 20,
+    "relay_slots": 18,
+    "boxes": 80,
+    "wall_time_s": 0.2261494,
+    "branches": 1787,
+    "conflicts": 11,
+    "time_limit_s": 2.0,
+    "selected_transport_sorties": 31,
+    "selected_relay_sorties": 7,
+    "validation": "PASS",
+    "metrics": {
+      "weighted_lateness": 31989.11341297362,
+      "makespan_s": 8050.27292298214,
+      "energy_kwh": 82.60055981855959,
+      "transport_sorties": 31,
+      "relay_sorties": 7
+    }
+  }
+]
